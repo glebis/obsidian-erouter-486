@@ -36,6 +36,7 @@ export const DEFAULT_SETTINGS: ERouter486Settings = {
     apiEndpoint: '',
     modelName: '',
     monitoringRules: [{
+        name: 'Default Rule',
         enabled: true,
         folders: [],
         delay: 10,
