@@ -179,13 +179,18 @@ export class ERouter486SettingTab extends PluginSettingTab {
     rule: MonitoringRule,
     index: number,
   ): void {
-    const ruleContainer = containerEl.createEl("details");
+    const ruleContainer = containerEl.createEl("details", { cls: "rule-container" });
     const summary = ruleContainer.createEl("summary", { cls: "rule-summary" });
-    summary.createSpan({ text: `Rule ${index + 1}: `, cls: "rule-number" });
+    summary.createSpan({ text: `${index + 1}`, cls: "rule-number" });
+    const expandIcon = summary.createSpan({ cls: "rule-expand-icon" });
     const ruleName = summary.createEl("input", {
       type: "text",
       value: rule.name || `Rule ${index + 1}`,
       cls: "rule-name-input",
+    });
+
+    ruleContainer.addEventListener("toggle", () => {
+      expandIcon.classList.toggle("expanded", ruleContainer.open);
     });
 
     ruleName.addEventListener("change", async (event) => {
