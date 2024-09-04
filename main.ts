@@ -1,6 +1,13 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ButtonComponent, TextAreaComponent, DropdownComponent, TextComponent, ToggleComponent, TAbstractFile, TFile, Vault } from 'obsidian';
 import { Groq } from 'groq-sdk';
 
+interface QueueItem {
+    content: string;
+    prompt: string;
+    resolve: (value: string | PromiseLike<string>) => void;
+    reject: (reason?: any) => void;
+}
+
 export interface MonitoringRule {
     enabled: boolean;
     folders: string[];
@@ -70,6 +77,10 @@ export default class ERouter486Plugin extends Plugin {
     settings: ERouter486Settings;
     private fileWatchers: Map<string, NodeJS.Timeout> = new Map();
     public app: App;
+    private requestQueue: QueueItem[] = [];
+    private isProcessingQueue: boolean = false;
+    private lastRequestTime: number = 0;
+    private readonly REQUEST_INTERVAL = 15000; // 15 seconds in milliseconds
 
     async onload() {
         console.log('Loading ERouter486Plugin');
@@ -150,13 +161,50 @@ export default class ERouter486Plugin extends Plugin {
     async processFile(file: TFile, rule: MonitoringRule) {
         console.debug(`ERouter486Plugin: Processing file ${file.path} with rule ${JSON.stringify(rule)}`);
         const content = await this.app.vault.read(file);
-        const processedContent = await this.processWithLLM(content, rule.prompt);
+        const processedContent = await this.queueLLMRequest(content, rule.prompt);
         await this.saveProcessedContent(file, processedContent, rule);
         await this.logOperation('process', file.path, rule);
     }
 
-    private lastRequestTime: number = 0;
-    private readonly REQUEST_INTERVAL = 15000; // 15 seconds in milliseconds
+    async queueLLMRequest(content: string, prompt: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            this.requestQueue.push({ content, prompt, resolve, reject });
+            this.processQueue();
+        });
+    }
+
+    private async processQueue() {
+        if (this.isProcessingQueue || this.requestQueue.length === 0) {
+            return;
+        }
+
+        this.isProcessingQueue = true;
+
+        while (this.requestQueue.length > 0) {
+            const now = Date.now();
+            const timeSinceLastRequest = now - this.lastRequestTime;
+
+            if (timeSinceLastRequest < this.REQUEST_INTERVAL) {
+                const waitTime = this.REQUEST_INTERVAL - timeSinceLastRequest;
+                console.debug(`ERouter486Plugin: Rate limiting - Waiting ${waitTime}ms before processing next request`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+            }
+
+            const { content, prompt, resolve, reject } = this.requestQueue.shift()!;
+
+            try {
+                const result = await this.processWithLLM(content, prompt);
+                resolve(result);
+            } catch (error) {
+                console.error('ERouter486Plugin: Error processing LLM request:', error);
+                reject(error);
+            }
+
+            this.lastRequestTime = Date.now();
+        }
+
+        this.isProcessingQueue = false;
+    }
 
     async processWithLLM(content: string, prompt: string): Promise<string> {
         console.debug(`ERouter486Plugin: Processing content with LLM, prompt: ${prompt}`);
@@ -168,17 +216,7 @@ export default class ERouter486Plugin extends Plugin {
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                // Implement rate limiting
-                const now = Date.now();
-                const timeSinceLastRequest = now - this.lastRequestTime;
-                if (timeSinceLastRequest < this.REQUEST_INTERVAL) {
-                    const waitTime = this.REQUEST_INTERVAL - timeSinceLastRequest;
-                    console.debug(`ERouter486Plugin: Rate limiting - Waiting ${waitTime}ms before making the next request`);
-                    await new Promise(resolve => setTimeout(resolve, waitTime));
-                }
-
                 console.debug(`ERouter486Plugin: Making LLM request (attempt ${attempt}/${maxRetries})`);
-                this.lastRequestTime = Date.now();
 
                 const chatCompletion = await groq.chat.completions.create({
                     messages: [
