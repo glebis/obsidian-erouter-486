@@ -78,14 +78,15 @@ export class FileProcessor {
                     this.fileChangeDebounce.set(file.path, setTimeout(async () => {
                         console.log(`ERouter486Plugin: Starting delay of ${rule.delay} seconds before processing`);
                         await new Promise(resolve => setTimeout(resolve, rule.delay * 1000));
-                        console.log(`ERouter486Plugin: Delay completed. Launching processing for file ${file.path}`);
+                        console.log(`ERouter486Plugin: Delay completed. Checking if file still exists.`);
                         if (await this.app.vault.adapter.exists(file.path)) {
+                            console.log(`ERouter486Plugin: File ${file.path} still exists. Launching processing.`);
                             await this.processFile(file, rule);
                         } else {
                             console.warn(`ERouter486Plugin: File ${file.path} no longer exists. Skipping processing.`);
                         }
                         this.fileChangeDebounce.delete(file.path);
-                    }, 1000)); // 1 second debounce
+                    }, rule.delay * 1000)); // Use rule.delay instead of fixed 1 second
                 }
             }
         } else if (file instanceof TFile) {
