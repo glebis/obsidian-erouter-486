@@ -3,7 +3,7 @@
   "name": "Obsidian eRouter 486",
   "version": "1.0.0",
   "minAppVersion": "0.15.0",
-  "description": "Monitors folders and creates new files using templates.",
+  "description": "Monitors folders and applies configurable AI-powered prompts to new or modified files using various LLM providers.",
   "author": "Gleb Kalinin",
   "authorUrl": "https://glebkalinin.com",
   "fundingUrl": "https://glebkalinin.com",
