@@ -156,7 +156,9 @@ export class ERouter486SettingTab extends PluginSettingTab {
           .setButtonText("Add Rule")
           .setCta()
           .onClick(() => {
+            const newRuleIndex = this.plugin.settings.monitoringRules.length + 1;
             this.plugin.settings.monitoringRules.push({
+              name: `Rule ${newRuleIndex}`,
               enabled: true,
               folders: [],
               delay: 10,

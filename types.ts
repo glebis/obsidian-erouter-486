@@ -1,4 +1,5 @@
 export interface MonitoringRule {
+    name: string;
     enabled: boolean;
     folders: string[];
     delay: number;
