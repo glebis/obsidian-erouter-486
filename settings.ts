@@ -8,6 +8,8 @@ import {
   TextComponent,
   ToggleComponent,
   Notice,
+  SuggestModal,
+  TFile,
 } from "obsidian";
 import ERouter486Plugin from "./main";
 import {
@@ -16,6 +18,26 @@ import {
   DEFAULT_SETTINGS,
   LLM_PROVIDERS,
 } from "./types";
+
+class FileSuggestModal extends SuggestModal<TFile> {
+  constructor(app: App, private onChoose: (file: TFile) => void) {
+    super(app);
+  }
+
+  getSuggestions(query: string): TFile[] {
+    return this.app.vault.getMarkdownFiles().filter(file => 
+      file.path.toLowerCase().includes(query.toLowerCase())
+    );
+  }
+
+  renderSuggestion(file: TFile, el: HTMLElement) {
+    el.createEl("div", { text: file.path });
+  }
+
+  onChooseSuggestion(file: TFile, evt: MouseEvent | KeyboardEvent) {
+    this.onChoose(file);
+  }
+}
 
 export class ERouter486SettingTab extends PluginSettingTab {
   plugin: ERouter486Plugin;
@@ -215,7 +237,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
 
     new Setting(ruleContainer)
       .setName("Prompt")
-      .setDesc("Enter the prompt to be applied")
+      .setDesc("Enter the prompt to be applied. Press Ctrl+[ to insert a file link.")
       .addTextArea((text: TextAreaComponent) => {
         text
           .setPlaceholder("Enter prompt")
@@ -226,6 +248,21 @@ export class ERouter486SettingTab extends PluginSettingTab {
           });
         text.inputEl.rows = 5;
         text.inputEl.cols = 50;
+
+        // Add file suggestion functionality
+        text.inputEl.addEventListener('keydown', (event: KeyboardEvent) => {
+          if (event.key === '[' && event.ctrlKey) {
+            event.preventDefault();
+            new FileSuggestModal(this.app, (file: TFile) => {
+              const cursorPosition = text.inputEl.selectionStart;
+              const currentValue = text.inputEl.value;
+              const newValue = currentValue.slice(0, cursorPosition) + `[[${file.path}]]` + currentValue.slice(cursorPosition);
+              text.setValue(newValue);
+              rule.prompt = newValue;
+              this.plugin.saveSettings();
+            }).open();
+          }
+        });
       });
 
     new Setting(ruleContainer)
