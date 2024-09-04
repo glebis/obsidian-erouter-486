@@ -7,7 +7,10 @@ describe('ERouter486Plugin File Monitoring', () => {
     let mockVault: jest.Mocked<Vault>;
 
     beforeEach(() => {
-        mockVault = new Vault() as jest.Mocked<Vault>;
+        mockVault = {
+            getFiles: jest.fn(),
+            on: jest.fn()
+        } as unknown as jest.Mocked<Vault>;
         const mockApp = { vault: mockVault } as any;
         const mockManifest = {} as any;
         plugin = new ERouter486Plugin(mockApp, mockManifest);
@@ -52,11 +55,12 @@ describe('ERouter486Plugin File Monitoring', () => {
     });
 
     test('checkFolder processes matching files', async () => {
-        const mockFile = new TFile() as jest.Mocked<TFile>;
-        mockFile.path = 'test-folder/test-file.md';
-        mockFile.name = 'test-file.md';
+        const mockFile = {
+            path: 'test-folder/test-file.md',
+            name: 'test-file.md'
+        } as TFile;
 
-        mockVault.getFiles.mockReturnValue([mockFile]);
+        (mockVault.getFiles as jest.Mock).mockReturnValue([mockFile]);
 
         const processFileSpy = jest.spyOn(plugin as any, 'processFile').mockResolvedValue(undefined);
 
