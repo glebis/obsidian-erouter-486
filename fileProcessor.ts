@@ -124,10 +124,15 @@ export class FileProcessor {
                         }
                     } else {
                         console.warn('ERouter486Plugin: Templater plugin not found. Applying template manually.');
-                        const processedContent = await this.app.vault.read(outputFile);
-                        const combinedContent = templateContent + '\n' + processedContent;
-                        await this.app.vault.modify(outputFile, combinedContent);
-                        console.debug(`ERouter486Plugin: Manual template application completed`);
+                        const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
+                        if (outputFile instanceof TFile) {
+                            const processedContent = await this.app.vault.read(outputFile);
+                            const combinedContent = templateContent + '\n' + processedContent;
+                            await this.app.vault.modify(outputFile, combinedContent);
+                            console.debug(`ERouter486Plugin: Manual template application completed`);
+                        } else {
+                            console.error(`ERouter486Plugin: Output file not found: ${outputFileName}`);
+                        }
                     }
                     console.debug(`ERouter486Plugin: Template application process completed`);
                 } else {
