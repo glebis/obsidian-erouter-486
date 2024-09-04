@@ -104,15 +104,18 @@ export class FileProcessor {
                     const templateFile = this.app.vault.getAbstractFileByPath(rule.templateFile) as TFile;
                     const templateContent = await this.app.vault.read(templateFile);
                     
+                    console.debug(`ERouter486Plugin: Starting template application process`);
                     // Process the template with Templater
                     const templater = this.app.plugins.plugins['templater-obsidian'];
                     if (templater) {
+                        console.debug(`ERouter486Plugin: Templater plugin found, applying template`);
                         const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
                         await templater.templater.append_template_to_active_file(templateFile, outputFile);
-                        console.debug(`ERouter486Plugin: Template applied to output file using Templater`);
+                        console.debug(`ERouter486Plugin: Template successfully applied to output file using Templater`);
                     } else {
                         console.warn('ERouter486Plugin: Templater plugin not found. Template not applied.');
                     }
+                    console.debug(`ERouter486Plugin: Template application process completed`);
                 } else {
                     console.debug(`ERouter486Plugin: No template file used or file doesn't exist`);
                 }
