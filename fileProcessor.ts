@@ -86,7 +86,7 @@ export class FileProcessor {
                             console.warn(`ERouter486Plugin: File ${file.path} no longer exists. Skipping processing.`);
                         }
                         this.fileChangeDebounce.delete(file.path);
-                    }, rule.delay * 1000)); // Use rule.delay instead of fixed 1 second
+                    }, 0)); // Set immediate timeout, but delay the processing inside
                 }
             }
         } else if (file instanceof TFile) {
@@ -105,7 +105,7 @@ export class FileProcessor {
             const processedContent = await this.queueLLMRequest(content, prompt);
             console.debug(`ERouter486Plugin: Received processed content from LLM, length: ${processedContent.length}`);
             
-            console.debug(`ERouter486Plugin: Attempting to save processed content`);
+            console.debug(`ERouter486Plugin: Delay completed. Now attempting to save processed content`);
             const outputFileName = await this.saveProcessedContent(file, processedContent, rule);
             if (outputFileName) {
                 console.debug(`ERouter486Plugin: Content saved successfully to ${outputFileName}`);
