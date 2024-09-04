@@ -11,6 +11,7 @@ export class FileProcessor {
     private lastRequestTime: number = 0;
     private readonly REQUEST_INTERVAL = 15000; // 15 seconds in milliseconds
     private pluginInitTime: number;
+    private lastProcessedTimes: Map<string, number> = new Map();
 
     constructor(private app: any, private settings: ERouter486Settings) {
         this.pluginInitTime = Date.now();
@@ -41,7 +42,14 @@ export class FileProcessor {
         );
 
         for (const file of files) {
-            await this.processFile(file, rule);
+            const stat = await this.app.vault.adapter.stat(file.path);
+            const lastModified = stat.mtime;
+            const lastProcessed = this.lastProcessedTimes.get(file.path) || 0;
+
+            if (lastModified > lastProcessed) {
+                await this.processFile(file, rule);
+                this.lastProcessedTimes.set(file.path, Date.now());
+            }
         }
     }
 
@@ -101,6 +109,7 @@ export class FileProcessor {
             const outputFileName = await this.saveProcessedContent(file, processedContent, rule);
             if (outputFileName) {
                 await this.logOperation('process', file.path, rule, outputFileName);
+                this.lastProcessedTimes.set(file.path, Date.now());
             }
         } else {
             console.warn(`ERouter486Plugin: File ${file.path} does not exist. Skipping processing.`);
