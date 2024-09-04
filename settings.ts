@@ -187,9 +187,12 @@ export class ERouter486SettingTab extends PluginSettingTab {
         toggle.setValue(rule.enabled).onChange(async (value) => {
           rule.enabled = value;
           await this.plugin.saveSettings();
-          summary.querySelector("h4").textContent = `Rule ${index + 1} ${value ? "(Enabled)" : "(Disabled)}`;
+          const h4 = summary.querySelector("h4");
+          if (h4) {
+            h4.textContent = `Rule ${index + 1} ${value ? "(Enabled)" : "(Disabled)}`;
+          }
         });
-      });
+      })
 
     new Setting(ruleContent)
       .setName("Monitored Folders")
@@ -223,7 +226,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
               await this.plugin.saveSettings();
             }
           });
-      });
+      })
 
     new Setting(ruleContent)
       .setName("File Name")
@@ -238,7 +241,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
             rule.fileNameTemplate = value;
             await this.plugin.saveSettings();
           });
-      });
+      })
 
     new Setting(ruleContent)
       .setName("Prompt")
@@ -292,7 +295,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
               this.plugin.saveSettings();
             }).open();
           });
-      });
+      })
 
     new Setting(ruleContent)
       .setName("Output File Name")
@@ -312,7 +315,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
       .setDesc(
         "Available variables: {{filename}}, {{date}}, {{time}}, {{extension}}",
       )
-      .setClass("setting-item-description");
+      .setClass("setting-item-description")
 
     new Setting(ruleContent)
       .setName("Output File Handling")
@@ -343,7 +346,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
             this.plugin.saveSettings();
             this.display();
           });
-      });
+      })
   }
 
   updateProviderSpecificSettings(provider: string): void {
