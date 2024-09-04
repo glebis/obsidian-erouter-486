@@ -1,6 +1,7 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ButtonComponent, TextAreaComponent, DropdownComponent, TextComponent, ToggleComponent, TAbstractFile, TFile, Vault } from 'obsidian';
 import { Groq } from 'groq-sdk';
 import { MonitoringRule } from './types';
+import { MonitoringRule } from './types';
 
 interface QueueItem {
     content: string;
