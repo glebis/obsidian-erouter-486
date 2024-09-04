@@ -190,8 +190,10 @@ export class ERouter486SettingTab extends PluginSettingTab {
       cls: "rule-name-input",
     });
 
-    ruleContainer.addEventListener("toggle", () => {
-      expandIcon.classList.toggle("expanded", ruleContainer.open);
+    ruleContainer.addEventListener("toggle", (event) => {
+      if (event.target instanceof HTMLDetailsElement) {
+        expandIcon.classList.toggle("expanded", event.target.open);
+      }
     });
 
     ruleName.addEventListener("change", async (event) => {
