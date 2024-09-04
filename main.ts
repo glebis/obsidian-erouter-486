@@ -147,7 +147,7 @@ export default class ERouter486Plugin extends Plugin {
     }
 
     async handleFileChange(file: TAbstractFile) {
-        if (file instanceof TFile) {
+        if (file instanceof TFile && await this.app.vault.adapter.exists(file.path)) {
             for (const rule of this.settings.monitoringRules) {
                 if (rule.enabled && 
                     rule.folders.some(folder => file.path.startsWith(folder)) &&
@@ -155,15 +155,21 @@ export default class ERouter486Plugin extends Plugin {
                     await this.processFile(file, rule);
                 }
             }
+        } else if (file instanceof TFile) {
+            console.warn(`ERouter486Plugin: File ${file.path} does not exist. Skipping processing.`);
         }
     }
 
     async processFile(file: TFile, rule: MonitoringRule) {
         console.debug(`ERouter486Plugin: Processing file ${file.path} with rule ${JSON.stringify(rule)}`);
-        const content = await this.app.vault.read(file);
-        const processedContent = await this.queueLLMRequest(content, rule.prompt);
-        await this.saveProcessedContent(file, processedContent, rule);
-        await this.logOperation('process', file.path, rule);
+        if (await this.app.vault.adapter.exists(file.path)) {
+            const content = await this.app.vault.read(file);
+            const processedContent = await this.queueLLMRequest(content, rule.prompt);
+            await this.saveProcessedContent(file, processedContent, rule);
+            await this.logOperation('process', file.path, rule);
+        } else {
+            console.warn(`ERouter486Plugin: File ${file.path} does not exist. Skipping processing.`);
+        }
     }
 
     async queueLLMRequest(content: string, prompt: string): Promise<string> {
