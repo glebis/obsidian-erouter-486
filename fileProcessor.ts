@@ -94,6 +94,7 @@ export class FileProcessor {
         console.debug(`ERouter486Plugin: Processing file ${file.path} with rule ${JSON.stringify(rule)}`);
         if (await this.app.vault.adapter.exists(file.path)) {
             const content = await this.app.vault.read(file);
+            console.debug(`ERouter486Plugin: File content read, length: ${content.length}`);
             let prompt = rule.prompt;
 
             if (rule.templateFile && await this.app.vault.adapter.exists(rule.templateFile)) {
@@ -105,11 +106,18 @@ export class FileProcessor {
                 console.debug(`ERouter486Plugin: No template file used or file doesn't exist`);
             }
 
+            console.debug(`ERouter486Plugin: Sending content to LLM for processing`);
             const processedContent = await this.queueLLMRequest(content, prompt);
+            console.debug(`ERouter486Plugin: Received processed content from LLM, length: ${processedContent.length}`);
+            
+            console.debug(`ERouter486Plugin: Attempting to save processed content`);
             const outputFileName = await this.saveProcessedContent(file, processedContent, rule);
             if (outputFileName) {
+                console.debug(`ERouter486Plugin: Content saved successfully to ${outputFileName}`);
                 await this.logOperation('process', file.path, rule, outputFileName);
                 this.lastProcessedTimes.set(file.path, Date.now());
+            } else {
+                console.error(`ERouter486Plugin: Failed to save processed content`);
             }
         } else {
             console.warn(`ERouter486Plugin: File ${file.path} does not exist. Skipping processing.`);
@@ -227,37 +235,44 @@ export class FileProcessor {
         return replacedText;
     }
 
-    async saveProcessedContent(file: TFile, content: string, rule: MonitoringRule): Promise<string> {
+    async saveProcessedContent(file: TFile, content: string, rule: MonitoringRule): Promise<string | null> {
         const outputFileName = this.getOutputFileName(file.name, rule.outputFileNameTemplate);
+        console.debug(`ERouter486Plugin: Attempting to save content to ${outputFileName}`);
         const outputFile = this.app.vault.getAbstractFileByPath(outputFileName);
 
-        if (outputFile instanceof TFile) {
-            switch (rule.outputFileHandling) {
-                case 'overwrite':
-                    await this.app.vault.modify(outputFile, content);
-                    console.debug(`ERouter486Plugin: Overwritten file ${outputFileName}`);
-                    return outputFileName;
-                case 'append':
-                    const existingContent = await this.app.vault.read(outputFile);
-                    await this.app.vault.modify(outputFile, existingContent + '\n' + content);
-                    console.debug(`ERouter486Plugin: Appended to file ${outputFileName}`);
-                    return outputFileName;
-                case 'rename':
-                    let newName = outputFileName;
-                    let counter = 1;
-                    while (this.app.vault.getAbstractFileByPath(newName)) {
-                        newName = `${outputFileName}_${counter}`;
-                        counter++;
-                    }
-                    await this.app.vault.create(newName, content);
-                    console.debug(`ERouter486Plugin: Created new file ${newName}`);
-                    return newName;
+        try {
+            if (outputFile instanceof TFile) {
+                switch (rule.outputFileHandling) {
+                    case 'overwrite':
+                        await this.app.vault.modify(outputFile, content);
+                        console.debug(`ERouter486Plugin: Overwritten file ${outputFileName}`);
+                        return outputFileName;
+                    case 'append':
+                        const existingContent = await this.app.vault.read(outputFile);
+                        await this.app.vault.modify(outputFile, existingContent + '\n' + content);
+                        console.debug(`ERouter486Plugin: Appended to file ${outputFileName}`);
+                        return outputFileName;
+                    case 'rename':
+                        let newName = outputFileName;
+                        let counter = 1;
+                        while (this.app.vault.getAbstractFileByPath(newName)) {
+                            newName = `${outputFileName}_${counter}`;
+                            counter++;
+                        }
+                        await this.app.vault.create(newName, content);
+                        console.debug(`ERouter486Plugin: Created new file ${newName}`);
+                        return newName;
+                }
+            } else {
+                await this.app.vault.create(outputFileName, content);
+                console.debug(`ERouter486Plugin: Created new file ${outputFileName}`);
+                return outputFileName;
             }
-        } else {
-            await this.app.vault.create(outputFileName, content);
-            console.debug(`ERouter486Plugin: Created new file ${outputFileName}`);
-            return outputFileName;
+        } catch (error) {
+            console.error(`ERouter486Plugin: Error saving processed content: ${error}`);
+            return null;
         }
+        return null;
     }
 
     getOutputFileName(originalName: string, template: string): string {
