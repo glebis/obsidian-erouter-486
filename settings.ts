@@ -166,6 +166,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
               prompt: "",
               templateFile: "",
               outputFileNameTemplate: "{{filename}}_processed",
+              outputFileName: "",
               outputFileHandling: "append",
             });
             this.plugin.saveSettings();
