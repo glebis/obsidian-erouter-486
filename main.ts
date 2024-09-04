@@ -1,6 +1,6 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ButtonComponent, TextAreaComponent, DropdownComponent, TextComponent, ToggleComponent } from 'obsidian';
 
-interface MonitoringRule {
+export interface MonitoringRule {
     enabled: boolean;
     folders: string[];
     delay: number;
@@ -11,7 +11,7 @@ interface MonitoringRule {
     outputFileHandling: 'overwrite' | 'append' | 'rename';
 }
 
-interface ERouter486Settings {
+export interface ERouter486Settings {
     llmProvider: string;
     apiKey: string;
     apiEndpoint: string;
@@ -89,7 +89,7 @@ export default class ERouter486Plugin extends Plugin {
         console.debug('ERouter486Plugin: Plugin unloaded and monitoring stopped');
     }
 
-    private startFileMonitoring() {
+    startFileMonitoring() {
         this.settings.monitoringRules.forEach(rule => {
             if (rule.enabled) {
                 rule.folders.forEach(folder => {
@@ -101,13 +101,13 @@ export default class ERouter486Plugin extends Plugin {
         });
     }
 
-    private stopFileMonitoring() {
+    stopFileMonitoring() {
         this.fileWatchers.forEach(watcher => clearInterval(watcher));
         this.fileWatchers.clear();
         console.debug('ERouter486Plugin: Stopped all file monitoring');
     }
 
-    private async checkFolder(folder: string, rule: MonitoringRule) {
+    async checkFolder(folder: string, rule: MonitoringRule) {
         const files = this.app.vault.getFiles().filter(file => 
             file.path.startsWith(folder) && 
             this.matchFileNameTemplate(file.name, rule.fileNameTemplate)
@@ -118,12 +118,12 @@ export default class ERouter486Plugin extends Plugin {
         }
     }
 
-    private matchFileNameTemplate(fileName: string, template: string): boolean {
+    matchFileNameTemplate(fileName: string, template: string): boolean {
         const regex = new RegExp('^' + template.replace(/\*/g, '.*') + '$');
         return regex.test(fileName);
     }
 
-    private async handleFileChange(file: TAbstractFile) {
+    async handleFileChange(file: TAbstractFile) {
         if (file instanceof TFile) {
             for (const rule of this.settings.monitoringRules) {
                 if (rule.enabled && 
@@ -135,7 +135,7 @@ export default class ERouter486Plugin extends Plugin {
         }
     }
 
-    private async processFile(file: TFile, rule: MonitoringRule) {
+    async processFile(file: TFile, rule: MonitoringRule) {
         console.debug(`ERouter486Plugin: Processing file ${file.path} with rule ${JSON.stringify(rule)}`);
         const content = await this.app.vault.read(file);
         const processedContent = await this.processWithLLM(content, rule.prompt);
@@ -143,13 +143,13 @@ export default class ERouter486Plugin extends Plugin {
         await this.logOperation('process', file.path, rule);
     }
 
-    private async processWithLLM(content: string, prompt: string): Promise<string> {
+    async processWithLLM(content: string, prompt: string): Promise<string> {
         // TODO: Implement actual LLM processing
         console.debug(`ERouter486Plugin: Processing content with LLM, prompt: ${prompt}`);
         return `Processed: ${content}\nWith prompt: ${prompt}`;
     }
 
-    private async saveProcessedContent(file: TFile, content: string, rule: MonitoringRule) {
+    async saveProcessedContent(file: TFile, content: string, rule: MonitoringRule) {
         const outputFileName = this.getOutputFileName(file.name, rule.outputFileNameTemplate);
         const outputFile = this.app.vault.getAbstractFileByPath(outputFileName);
 
@@ -181,7 +181,7 @@ export default class ERouter486Plugin extends Plugin {
         }
     }
 
-    private getOutputFileName(originalName: string, template: string): string {
+    getOutputFileName(originalName: string, template: string): string {
         const date = new Date();
         return template
             .replace(/{{filename}}/g, originalName.replace(/\.[^/.]+$/, ""))
@@ -198,13 +198,13 @@ export default class ERouter486Plugin extends Plugin {
         await this.saveData(this.settings);
     }
 
-    private async logOperation(operation: string, filePath: string, rule: MonitoringRule) {
+    async logOperation(operation: string, filePath: string, rule: MonitoringRule) {
         const logEntry = `[${new Date().toISOString()}] ${operation}: ${filePath} (Rule: ${JSON.stringify(rule)})\n`;
         console.debug(`ERouter486Plugin: ${logEntry.trim()}`);
         await this.appendToLogFile(logEntry);
     }
 
-    private async appendToLogFile(content: string) {
+    async appendToLogFile(content: string) {
         const logFile = this.app.vault.getAbstractFileByPath(this.settings.logFilePath);
         if (logFile instanceof TFile) {
             const existingContent = await this.app.vault.read(logFile);
