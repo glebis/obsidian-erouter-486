@@ -160,19 +160,34 @@ export default class ERouter486Plugin extends Plugin {
         
         const groq = new Groq({ apiKey: this.settings.apiKey, dangerouslyAllowBrowser: true });
         
-        try {
-            const chatCompletion = await groq.chat.completions.create({
-                messages: [
-                    { role: 'system', content: 'You are a helpful assistant.' },
-                    { role: 'user', content: `${prompt}\n\nContent: ${content}` }
-                ],
-                model: this.settings.modelName,
-            });
+        const maxRetries = 3;
+        const delayBetweenRetries = 2000; // 2 seconds
 
-            return chatCompletion.choices[0]?.message?.content || 'No response from LLM';
-        } catch (error) {
-            console.error('Error processing with LLM:', error);
-            return `Error processing content: ${error.message}`;
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const chatCompletion = await groq.chat.completions.create({
+                    messages: [
+                        { role: 'system', content: 'You are a helpful assistant.' },
+                        { role: 'user', content: `${prompt}\n\nContent: ${content}` }
+                    ],
+                    model: this.settings.modelName,
+                });
+
+                return chatCompletion.choices[0]?.message?.content || 'No response from LLM';
+            } catch (error) {
+                console.error(`Error processing with LLM (attempt ${attempt}/${maxRetries}):`, error);
+                
+                if (attempt === maxRetries) {
+                    return `Error processing content after ${maxRetries} attempts: ${error.message}`;
+                }
+
+                if (error.message.includes('429')) {
+                    console.log(`Rate limit reached. Waiting ${delayBetweenRetries}ms before retrying...`);
+                    await new Promise(resolve => setTimeout(resolve, delayBetweenRetries));
+                } else {
+                    throw error; // If it's not a rate limit error, throw it immediately
+                }
+            }
         }
     }
 
