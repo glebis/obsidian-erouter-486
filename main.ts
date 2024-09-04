@@ -158,7 +158,7 @@ export default class ERouter486Plugin extends Plugin {
     async processWithLLM(content: string, prompt: string): Promise<string> {
         console.debug(`ERouter486Plugin: Processing content with LLM, prompt: ${prompt}`);
         
-        const groq = new Groq({ apiKey: this.settings.apiKey });
+        const groq = new Groq({ apiKey: this.settings.apiKey, dangerouslyAllowBrowser: true });
         
         try {
             const chatCompletion = await groq.chat.completions.create({
@@ -247,7 +247,7 @@ export default class ERouter486Plugin extends Plugin {
         }
 
         try {
-            const groq = new Groq({ apiKey: this.settings.apiKey });
+            const groq = new Groq({ apiKey: this.settings.apiKey, dangerouslyAllowBrowser: true });
             const chatCompletion = await groq.chat.completions.create({
                 messages: [{ role: 'user', content: 'Hello, this is a test message.' }],
                 model: this.settings.modelName,
