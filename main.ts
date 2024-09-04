@@ -88,4 +88,8 @@ export default class ERouter486Plugin extends Plugin {
     getProviderInfo(provider: string) {
         return LLM_PROVIDERS[provider] || null;
     }
+
+    getFactorial(n: number): number {
+        return Math.factorial(n);
+    }
 }

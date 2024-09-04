@@ -18,7 +18,7 @@
       "ES6",
       "ES7"
     ],
-    "types": ["node", "handlebars", "jest"],
+    "types": ["node", "handlebars", "jest", "./math"],
     "strict": true
   },
   "include": [
