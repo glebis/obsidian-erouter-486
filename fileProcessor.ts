@@ -114,6 +114,7 @@ export class FileProcessor {
                     console.debug(`ERouter486Plugin: Using template file ${rule.templateFile}`);
                     const templateFile = this.app.vault.getAbstractFileByPath(rule.templateFile) as TFile;
                     const templateContent = await this.app.vault.read(templateFile);
+                    console.debug(`ERouter486Plugin: Template content read, length: ${templateContent.length}`);
                     
                     console.debug(`ERouter486Plugin: Starting template application process`);
                     // Process the template with Templater
@@ -125,9 +126,9 @@ export class FileProcessor {
                             await templater.templater.overwrite_file_commands(outputFile, templateContent);
                             console.debug(`ERouter486Plugin: Template successfully applied to output file using Templater`);
                         } catch (error) {
-                            console.error(`ERouter486Plugin: Error applying template:`, error);
+                            console.error(`ERouter486Plugin: Error applying template with Templater:`, error);
                             console.debug(`ERouter486Plugin: Falling back to manual template application`);
-                            await this.manualTemplateApplication(outputFile, templateContent);
+                            await this.manualTemplateApplication(outputFile, templateContent, processedContent);
                         }
                     } else {
                         console.warn('ERouter486Plugin: Templater plugin not found. Applying template manually.');
@@ -169,12 +170,16 @@ export class FileProcessor {
     }
 
     private async manualTemplateApplication(outputFile: TFile, templateContent: string, processedContent: string): Promise<void> {
+        console.debug(`ERouter486Plugin: Starting manual template application for file ${outputFile.path}`);
+        console.debug(`ERouter486Plugin: Template content length: ${templateContent.length}`);
+        console.debug(`ERouter486Plugin: Processed content length: ${processedContent.length}`);
         try {
             const combinedContent = templateContent + '\n' + processedContent;
+            console.debug(`ERouter486Plugin: Combined content length: ${combinedContent.length}`);
             await this.app.vault.modify(outputFile, combinedContent);
-            console.debug(`ERouter486Plugin: Manual template application completed`);
+            console.debug(`ERouter486Plugin: Manual template application completed for file ${outputFile.path}`);
         } catch (error) {
-            console.error(`ERouter486Plugin: Error in manual template application:`, error);
+            console.error(`ERouter486Plugin: Error in manual template application for file ${outputFile.path}:`, error);
         }
     }
 
