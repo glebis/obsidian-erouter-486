@@ -1,4 +1,5 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ButtonComponent, TextAreaComponent, DropdownComponent, TextComponent, ToggleComponent, TAbstractFile, TFile, Vault } from 'obsidian';
+import { Groq } from '@groq/groq';
 
 export interface MonitoringRule {
     enabled: boolean;
@@ -155,9 +156,24 @@ export default class ERouter486Plugin extends Plugin {
     }
 
     async processWithLLM(content: string, prompt: string): Promise<string> {
-        // TODO: Implement actual LLM processing
         console.debug(`ERouter486Plugin: Processing content with LLM, prompt: ${prompt}`);
-        return `Processed: ${content}\nWith prompt: ${prompt}`;
+        
+        const groq = new Groq(this.settings.apiKey);
+        
+        try {
+            const chatCompletion = await groq.chat.completions.create({
+                messages: [
+                    { role: 'system', content: 'You are a helpful assistant.' },
+                    { role: 'user', content: `${prompt}\n\nContent: ${content}` }
+                ],
+                model: this.settings.modelName,
+            });
+
+            return chatCompletion.choices[0]?.message?.content || 'No response from LLM';
+        } catch (error) {
+            console.error('Error processing with LLM:', error);
+            return `Error processing content: ${error.message}`;
+        }
     }
 
     async saveProcessedContent(file: TFile, content: string, rule: MonitoringRule) {
@@ -231,12 +247,17 @@ export default class ERouter486Plugin extends Plugin {
         }
 
         try {
-            // TODO: Implement actual GROQ API connection test
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // GROQ-specific check logic would go here
+            const groq = new Groq(this.settings.apiKey);
+            const chatCompletion = await groq.chat.completions.create({
+                messages: [{ role: 'user', content: 'Hello, this is a test message.' }],
+                model: this.settings.modelName,
+            });
 
-            return { success: true, message: 'Connection to GROQ successful!' };
+            if (chatCompletion.choices && chatCompletion.choices.length > 0) {
+                return { success: true, message: 'Connection to GROQ successful!' };
+            } else {
+                return { success: false, message: 'Connection to GROQ failed: No response received.' };
+            }
         } catch (error) {
             console.error('GROQ connection test failed:', error);
             return { success: false, message: `Connection to GROQ failed: ${error.message}` };
