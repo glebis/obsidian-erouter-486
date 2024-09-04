@@ -1,16 +1,6 @@
-import { TFile, Vault } from 'obsidian';
+import { TFile, Vault, App } from 'obsidian';
 import ERouter486Plugin from '../main';
 import { MonitoringRule } from '../main';
-
-// Mock Obsidian's API
-jest.mock('obsidian', () => ({
-    Plugin: class {},
-    TFile: class {},
-    Vault: class {
-        on() {}
-        getFiles() { return []; }
-    },
-}));
 
 describe('ERouter486Plugin File Monitoring', () => {
     let plugin: ERouter486Plugin;

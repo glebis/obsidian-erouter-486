@@ -7,6 +7,6 @@ module.exports = {
   },
   testMatch: ['**/tests/**/*.test.ts'],
   moduleNameMapper: {
-    '^obsidian$': '<rootDir>/node_modules/obsidian',
+    '^obsidian$': '<rootDir>/__mocks__/obsidian.ts',
   },
 };
