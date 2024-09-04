@@ -12,6 +12,7 @@ export class FileProcessor {
     private readonly REQUEST_INTERVAL = 15000; // 15 seconds in milliseconds
     private lastProcessedTimes: Map<string, number> = new Map();
     private fileChangeDebounce: Map<string, NodeJS.Timeout> = new Map();
+    private processingFiles: Set<string> = new Set();
 
     constructor(private app: any, private settings: ERouter486Settings) {}
 
@@ -45,7 +46,7 @@ export class FileProcessor {
                 const lastModified = stat.mtime;
                 const lastProcessed = this.lastProcessedTimes.get(file.path) || 0;
 
-                if (lastModified > lastProcessed) {
+                if (lastModified > lastProcessed && !this.processingFiles.has(file.path)) {
                     await this.processFile(file, rule);
                     this.lastProcessedTimes.set(file.path, Date.now());
                 }
@@ -79,9 +80,11 @@ export class FileProcessor {
                         console.log(`ERouter486Plugin: Starting delay of ${rule.delay} seconds before processing`);
                         await new Promise(resolve => setTimeout(resolve, rule.delay * 1000));
                         console.log(`ERouter486Plugin: Delay completed. Checking if file still exists.`);
-                        if (await this.app.vault.adapter.exists(file.path)) {
+                        if (await this.app.vault.adapter.exists(file.path) && !this.processingFiles.has(file.path)) {
                             console.log(`ERouter486Plugin: File ${file.path} still exists. Launching processing.`);
                             await this.processFile(file, rule);
+                        } else if (this.processingFiles.has(file.path)) {
+                            console.log(`ERouter486Plugin: File ${file.path} is already being processed. Skipping.`);
                         } else {
                             console.warn(`ERouter486Plugin: File ${file.path} no longer exists. Skipping processing.`);
                         }
@@ -95,77 +98,88 @@ export class FileProcessor {
     }
 
     async processFile(file: TFile, rule: MonitoringRule): Promise<void> {
+        if (this.processingFiles.has(file.path)) {
+            console.log(`ERouter486Plugin: File ${file.path} is already being processed. Skipping.`);
+            return;
+        }
+
+        this.processingFiles.add(file.path);
         console.debug(`ERouter486Plugin: Processing file ${file.path} with rule ${JSON.stringify(rule)}`);
-        if (await this.app.vault.adapter.exists(file.path)) {
-            const content = await this.app.vault.read(file);
-            console.debug(`ERouter486Plugin: File content read, length: ${content.length}`);
-            let prompt = rule.prompt;
 
-            console.debug(`ERouter486Plugin: Sending content to LLM for processing`);
-            const processedContent = await this.queueLLMRequest(content, prompt);
-            console.debug(`ERouter486Plugin: Received processed content from LLM, length: ${processedContent.length}`);
-            
-            console.debug(`ERouter486Plugin: Delay completed. Now attempting to save processed content`);
-            const outputFileName = await this.saveProcessedContent(file, processedContent, rule);
-            if (outputFileName) {
-                console.debug(`ERouter486Plugin: Content saved successfully to ${outputFileName}`);
+        try {
+            if (await this.app.vault.adapter.exists(file.path)) {
+                const content = await this.app.vault.read(file);
+                console.debug(`ERouter486Plugin: File content read, length: ${content.length}`);
+                let prompt = rule.prompt;
+
+                console.debug(`ERouter486Plugin: Sending content to LLM for processing`);
+                const processedContent = await this.queueLLMRequest(content, prompt);
+                console.debug(`ERouter486Plugin: Received processed content from LLM, length: ${processedContent.length}`);
                 
-                if (rule.templateFile && await this.app.vault.adapter.exists(rule.templateFile)) {
-                    console.debug(`ERouter486Plugin: Using template file ${rule.templateFile}`);
-                    const templateFile = this.app.vault.getAbstractFileByPath(rule.templateFile) as TFile;
-                    const templateContent = await this.app.vault.read(templateFile);
-                    console.debug(`ERouter486Plugin: Template content read, length: ${templateContent.length}`);
+                console.debug(`ERouter486Plugin: Now attempting to save processed content`);
+                const outputFileName = await this.saveProcessedContent(file, processedContent, rule);
+                if (outputFileName) {
+                    console.debug(`ERouter486Plugin: Content saved successfully to ${outputFileName}`);
                     
-                    console.debug(`ERouter486Plugin: Starting template application process`);
-                    // Process the template with Templater
-                    const templater = this.app.plugins.plugins['templater-obsidian'];
-                    if (templater) {
-                        console.debug(`ERouter486Plugin: Templater plugin found, applying template`);
-                        const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
-                        try {
-                            await templater.templater.overwrite_file_commands(outputFile, templateContent);
-                            console.debug(`ERouter486Plugin: Template successfully applied to output file using Templater`);
-                        } catch (error) {
-                            console.error(`ERouter486Plugin: Error applying template with Templater:`, error);
-                            console.debug(`ERouter486Plugin: Falling back to manual template application`);
-                            await this.manualTemplateApplication(outputFile, templateContent, processedContent);
+                    if (rule.templateFile && await this.app.vault.adapter.exists(rule.templateFile)) {
+                        console.debug(`ERouter486Plugin: Using template file ${rule.templateFile}`);
+                        const templateFile = this.app.vault.getAbstractFileByPath(rule.templateFile) as TFile;
+                        const templateContent = await this.app.vault.read(templateFile);
+                        console.debug(`ERouter486Plugin: Template content read, length: ${templateContent.length}`);
+                        
+                        console.debug(`ERouter486Plugin: Starting template application process`);
+                        // Process the template with Templater
+                        const templater = this.app.plugins.plugins['templater-obsidian'];
+                        if (templater) {
+                            console.debug(`ERouter486Plugin: Templater plugin found, applying template`);
+                            const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
+                            try {
+                                await templater.templater.overwrite_file_commands(outputFile, templateContent);
+                                console.debug(`ERouter486Plugin: Template successfully applied to output file using Templater`);
+                            } catch (error) {
+                                console.error(`ERouter486Plugin: Error applying template with Templater:`, error);
+                                console.debug(`ERouter486Plugin: Falling back to manual template application`);
+                                await this.manualTemplateApplication(outputFile, templateContent, processedContent);
+                            }
+                        } else {
+                            console.warn('ERouter486Plugin: Templater plugin not found. Applying template manually.');
+                            const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
+                            if (outputFile instanceof TFile) {
+                                await this.manualTemplateApplication(outputFile, templateContent, processedContent);
+                            } else {
+                                console.error(`ERouter486Plugin: Output file not found: ${outputFileName}`);
+                            }
                         }
+                        console.debug(`ERouter486Plugin: Template application process completed`);
                     } else {
-                        console.warn('ERouter486Plugin: Templater plugin not found. Applying template manually.');
-                        const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
-                        if (outputFile instanceof TFile) {
-                            await this.manualTemplateApplication(outputFile, templateContent, processedContent);
-                        } else {
-                            console.error(`ERouter486Plugin: Output file not found: ${outputFileName}`);
-                        }
+                        console.debug(`ERouter486Plugin: No template file used or file doesn't exist`);
                     }
-                    console.debug(`ERouter486Plugin: Template application process completed`);
-                } else {
-                    console.debug(`ERouter486Plugin: No template file used or file doesn't exist`);
-                }
 
-                await this.logOperation('process', file.path, rule, outputFileName);
-                this.lastProcessedTimes.set(file.path, Date.now());
-                
-                if (rule.deleteSourceFile) {
-                    console.debug(`ERouter486Plugin: Attempting to delete source file ${file.path}`);
-                    try {
-                        if (await this.app.vault.adapter.exists(file.path)) {
-                            await this.app.vault.delete(file);
-                            console.debug(`ERouter486Plugin: Source file ${file.path} deleted successfully`);
-                            await this.logOperation('delete', file.path, rule);
-                        } else {
-                            console.warn(`ERouter486Plugin: Source file ${file.path} no longer exists. Skipping deletion.`);
+                    await this.logOperation('process', file.path, rule, outputFileName);
+                    this.lastProcessedTimes.set(file.path, Date.now());
+                    
+                    if (rule.deleteSourceFile) {
+                        console.debug(`ERouter486Plugin: Attempting to delete source file ${file.path}`);
+                        try {
+                            if (await this.app.vault.adapter.exists(file.path)) {
+                                await this.app.vault.delete(file);
+                                console.debug(`ERouter486Plugin: Source file ${file.path} deleted successfully`);
+                                await this.logOperation('delete', file.path, rule);
+                            } else {
+                                console.warn(`ERouter486Plugin: Source file ${file.path} no longer exists. Skipping deletion.`);
+                            }
+                        } catch (error) {
+                            console.error(`ERouter486Plugin: Failed to delete source file ${file.path}:`, error);
                         }
-                    } catch (error) {
-                        console.error(`ERouter486Plugin: Failed to delete source file ${file.path}:`, error);
                     }
+                } else {
+                    console.error(`ERouter486Plugin: Failed to save processed content`);
                 }
             } else {
-                console.error(`ERouter486Plugin: Failed to save processed content`);
+                console.warn(`ERouter486Plugin: File ${file.path} does not exist. Skipping processing.`);
             }
-        } else {
-            console.warn(`ERouter486Plugin: File ${file.path} does not exist. Skipping processing.`);
+        } finally {
+            this.processingFiles.delete(file.path);
         }
     }
 
