@@ -18,7 +18,9 @@ describe('ERouter486Plugin File Monitoring', () => {
 
     beforeEach(() => {
         mockVault = new Vault() as jest.Mocked<Vault>;
-        plugin = new ERouter486Plugin({ vault: mockVault } as any);
+        const mockApp = { vault: mockVault } as any;
+        const mockManifest = {} as any;
+        plugin = new ERouter486Plugin(mockApp, mockManifest);
         plugin.settings = {
             monitoringRules: [
                 {
