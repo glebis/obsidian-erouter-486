@@ -179,7 +179,7 @@ export default class ERouter486Plugin extends Plugin {
         }
     }
 
-    async processFile(file: TFile, rule: MonitoringRule) {
+    async processFile(file: TFile, rule: MonitoringRule): Promise<void> {
         console.debug(`ERouter486Plugin: Processing file ${file.path} with rule ${JSON.stringify(rule)}`);
         if (await this.app.vault.adapter.exists(file.path)) {
             const content = await this.app.vault.read(file);
