@@ -189,7 +189,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
           const h4 = summary.querySelector("h4");
           if (h4) {
-            h4.textContent = `Rule ${index + 1} ${value ? "(Enabled)" : "(Disabled)}`;
+            h4.textContent = `Rule ${index + 1} ${value ? "(Enabled)" : "(Disabled)"}`;
           }
         });
       })
