@@ -99,7 +99,9 @@ export class FileProcessor {
 
             const processedContent = await this.queueLLMRequest(content, prompt);
             const outputFileName = await this.saveProcessedContent(file, processedContent, rule);
-            await this.logOperation('process', file.path, rule, outputFileName);
+            if (outputFileName) {
+                await this.logOperation('process', file.path, rule, outputFileName);
+            }
         } else {
             console.warn(`ERouter486Plugin: File ${file.path} does not exist. Skipping processing.`);
         }
@@ -259,20 +261,24 @@ export class FileProcessor {
     }
 
     async logOperation(operation: string, filePath: string, rule: MonitoringRule, outputFileName?: string) {
-        const inputFileLink = `[[${filePath}]]`;
-        const outputFileLink = outputFileName ? `[[${outputFileName}]]` : '';
-        const friendlyTime = new Date().toLocaleString('en-US', { 
-            year: 'numeric', 
-            month: '2-digit', 
-            day: '2-digit', 
-            hour: '2-digit', 
-            minute: '2-digit', 
-            second: '2-digit', 
-            hour12: false 
-        });
-        const logEntry = `- [${friendlyTime}] ${operation}: ${inputFileLink} → ${outputFileLink} (Rule: ${rule.name})\n`;
-        console.debug(`ERouter486Plugin: ${logEntry.trim()}`);
-        await this.appendToLogFile(logEntry);
+        if (outputFileName) {
+            const inputFileLink = `[[${filePath}]]`;
+            const outputFileLink = `[[${outputFileName}]]`;
+            const friendlyTime = new Date().toLocaleString('en-US', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit', 
+                hour12: false 
+            });
+            const logEntry = `- [${friendlyTime}] ${operation}: ${inputFileLink} → ${outputFileLink} (Rule: ${rule.name})\n`;
+            console.debug(`ERouter486Plugin: ${logEntry.trim()}`);
+            await this.appendToLogFile(logEntry);
+        } else {
+            console.debug(`ERouter486Plugin: No output file created or modified for ${filePath}`);
+        }
     }
 
     async appendToLogFile(content: string) {
