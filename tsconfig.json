@@ -18,6 +18,7 @@
       "ES6",
       "ES7"
     ],
+    "types": ["node", "handlebars"],
     "strict": true
   },
   "include": [

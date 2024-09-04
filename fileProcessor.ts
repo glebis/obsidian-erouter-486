@@ -2,6 +2,7 @@ import { TFile, TAbstractFile, Vault } from 'obsidian';
 import { Groq } from 'groq-sdk';
 import { MonitoringRule, ERouter486Settings, QueueItem } from './types';
 import { Notice } from 'obsidian';
+import * as Handlebars from 'handlebars';
 
 export class FileProcessor {
     private fileWatchers: Map<string, NodeJS.Timeout> = new Map();
@@ -85,7 +86,18 @@ export class FileProcessor {
         console.debug(`ERouter486Plugin: Processing file ${file.path} with rule ${JSON.stringify(rule)}`);
         if (await this.app.vault.adapter.exists(file.path)) {
             const content = await this.app.vault.read(file);
-            const processedContent = await this.queueLLMRequest(content, rule.prompt);
+            let prompt = rule.prompt;
+
+            if (rule.templateFile && await this.app.vault.adapter.exists(rule.templateFile)) {
+                console.debug(`ERouter486Plugin: Using template file ${rule.templateFile}`);
+                const templateContent = await this.app.vault.read(this.app.vault.getAbstractFileByPath(rule.templateFile) as TFile);
+                const template = Handlebars.compile(templateContent);
+                prompt = template({ content, fileName: file.name, filePath: file.path });
+            } else {
+                console.debug(`ERouter486Plugin: No template file used or file doesn't exist`);
+            }
+
+            const processedContent = await this.queueLLMRequest(content, prompt);
             await this.saveProcessedContent(file, processedContent, rule);
             await this.logOperation('process', file.path, rule);
         } else {

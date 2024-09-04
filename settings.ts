@@ -267,14 +267,25 @@ export class ERouter486SettingTab extends PluginSettingTab {
 
     new Setting(ruleContainer)
       .setName("Template File")
-      .setDesc("Enter the path to an optional template file")
+      .setDesc("Select an optional template file")
       .addText((text: TextComponent) => {
         text
-          .setPlaceholder("Enter template file path")
+          .setPlaceholder("Select template file")
           .setValue(rule.templateFile)
           .onChange(async (value) => {
             rule.templateFile = value;
             await this.plugin.saveSettings();
+          });
+      })
+      .addButton((button: ButtonComponent) => {
+        button
+          .setButtonText("Select")
+          .onClick(async () => {
+            new FileSuggestModal(this.app, (file: TFile) => {
+              rule.templateFile = file.path;
+              (ruleContainer.querySelectorAll('.setting-item')[6].querySelector('input') as HTMLInputElement).value = file.path;
+              this.plugin.saveSettings();
+            }).open();
           });
       });
 
