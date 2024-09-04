@@ -1,15 +1,17 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ButtonComponent } from 'obsidian';
 
 interface ERouter486Settings {
     folders: string[];
     llmProvider: string;
     apiKey: string;
+    apiEndpoint: string;
 }
 
 const DEFAULT_SETTINGS: ERouter486Settings = {
     folders: [],
     llmProvider: 'openai',
-    apiKey: ''
+    apiKey: '',
+    apiEndpoint: ''
 }
 
 export default class ERouter486Plugin extends Plugin {
@@ -31,6 +33,24 @@ export default class ERouter486Plugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+
+    async testLLMConnection(): Promise<boolean> {
+        // This is a placeholder implementation. You should replace this with actual API calls to the selected LLM provider.
+        try {
+            // Simulating an API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // For demonstration purposes, we're considering the connection successful if the API key is not empty
+            if (this.settings.apiKey.trim() !== '') {
+                return true;
+            } else {
+                throw new Error('API key is empty');
+            }
+        } catch (error) {
+            console.error('LLM connection test failed:', error);
+            return false;
+        }
     }
 }
 
@@ -84,5 +104,35 @@ class ERouter486SettingTab extends PluginSettingTab {
                     this.plugin.settings.apiKey = value;
                     await this.plugin.saveSettings();
                 }));
+
+        new Setting(containerEl)
+            .setName('API Endpoint')
+            .setDesc('Enter the API endpoint for the selected LLM provider (if applicable)')
+            .addText(text => text
+                .setPlaceholder('Enter API endpoint')
+                .setValue(this.plugin.settings.apiEndpoint)
+                .onChange(async (value) => {
+                    this.plugin.settings.apiEndpoint = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('Test LLM Connection')
+            .setDesc('Click to test the connection to the LLM provider')
+            .addButton((button: ButtonComponent) => {
+                button
+                    .setButtonText('Test Connection')
+                    .setCta()
+                    .onClick(async () => {
+                        button.setDisabled(true);
+                        const success = await this.plugin.testLLMConnection();
+                        if (success) {
+                            new Notice('LLM connection test successful!');
+                        } else {
+                            new Notice('LLM connection test failed. Please check your settings and try again.');
+                        }
+                        button.setDisabled(false);
+                    });
+            });
     }
 }
