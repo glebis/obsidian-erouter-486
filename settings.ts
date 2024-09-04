@@ -10,6 +10,7 @@ import {
   Notice,
   SuggestModal,
   TFile,
+  TAbstractFile
 } from "obsidian";
 import ERouter486Plugin from "./main";
 import {
