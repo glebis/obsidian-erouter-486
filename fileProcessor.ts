@@ -111,7 +111,7 @@ export class FileProcessor {
                         console.debug(`ERouter486Plugin: Templater plugin found, applying template`);
                         const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
                         try {
-                            await templater.templater.append_template_to_active_file(templateFile, outputFile);
+                            await templater.templater.overwrite_file_commands(outputFile, templateContent);
                             console.debug(`ERouter486Plugin: Template successfully applied to output file using Templater`);
                         } catch (error) {
                             console.error(`ERouter486Plugin: Error applying template:`, error);
