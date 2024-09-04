@@ -128,29 +128,12 @@ export class FileProcessor {
                         console.debug(`ERouter486Plugin: Template content read, length: ${templateContent.length}`);
                         
                         console.debug(`ERouter486Plugin: Starting template application process`);
-                        // Process the template with Templater
-                        const templater = this.app.plugins.plugins['templater-obsidian'];
-                        if (templater) {
-                            console.debug(`ERouter486Plugin: Templater plugin found, applying template`);
-                            const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
-                            try {
-                                await templater.templater.overwrite_file_commands(outputFile, templateContent);
-                                console.debug(`ERouter486Plugin: Template successfully applied to output file using Templater`);
-                            } catch (error) {
-                                console.error(`ERouter486Plugin: Error applying template with Templater:`, error);
-                                console.debug(`ERouter486Plugin: Falling back to manual template application`);
-                                await this.manualTemplateApplication(outputFile, templateContent, processedContent);
-                            }
+                        const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
+                        if (outputFile instanceof TFile) {
+                            await this.applyTemplate(outputFile, templateContent, processedContent);
                         } else {
-                            console.warn('ERouter486Plugin: Templater plugin not found. Applying template manually.');
-                            const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
-                            if (outputFile instanceof TFile) {
-                                await this.manualTemplateApplication(outputFile, templateContent, processedContent);
-                            } else {
-                                console.error(`ERouter486Plugin: Output file not found: ${outputFileName}`);
-                            }
+                            console.error(`ERouter486Plugin: Output file not found: ${outputFileName}`);
                         }
-                        console.debug(`ERouter486Plugin: Template application process completed`);
                     } else {
                         console.debug(`ERouter486Plugin: No template file used or file doesn't exist`);
                     }
@@ -178,23 +161,47 @@ export class FileProcessor {
             } else {
                 console.warn(`ERouter486Plugin: File ${file.path} does not exist. Skipping processing.`);
             }
+        } catch (error) {
+            console.error(`ERouter486Plugin: Error processing file ${file.path}:`, error);
         } finally {
             this.processingFiles.delete(file.path);
         }
     }
 
-    private async manualTemplateApplication(outputFile: TFile, templateContent: string, processedContent: string): Promise<void> {
-        console.debug(`ERouter486Plugin: Starting manual template application for file ${outputFile.path}`);
+    private async applyTemplate(outputFile: TFile, templateContent: string, processedContent: string): Promise<void> {
+        console.debug(`ERouter486Plugin: Starting template application for file ${outputFile.path}`);
         console.debug(`ERouter486Plugin: Template content length: ${templateContent.length}`);
         console.debug(`ERouter486Plugin: Processed content length: ${processedContent.length}`);
         try {
-            const combinedContent = templateContent + '\n' + processedContent;
-            console.debug(`ERouter486Plugin: Combined content length: ${combinedContent.length}`);
-            await this.app.vault.modify(outputFile, combinedContent);
-            console.debug(`ERouter486Plugin: Manual template application completed for file ${outputFile.path}`);
+            // Process the template with Templater if available
+            const templater = this.app.plugins.plugins['templater-obsidian'];
+            if (templater) {
+                console.debug(`ERouter486Plugin: Templater plugin found, applying template`);
+                try {
+                    await templater.templater.overwrite_file_commands(outputFile, templateContent);
+                    console.debug(`ERouter486Plugin: Template successfully applied to output file using Templater`);
+                    // Append the processed content after the template
+                    const currentContent = await this.app.vault.read(outputFile);
+                    await this.app.vault.modify(outputFile, currentContent + '\n' + processedContent);
+                } catch (error) {
+                    console.error(`ERouter486Plugin: Error applying template with Templater:`, error);
+                    console.debug(`ERouter486Plugin: Falling back to manual template application`);
+                    await this.manualTemplateApplication(outputFile, templateContent, processedContent);
+                }
+            } else {
+                console.warn('ERouter486Plugin: Templater plugin not found. Applying template manually.');
+                await this.manualTemplateApplication(outputFile, templateContent, processedContent);
+            }
+            console.debug(`ERouter486Plugin: Template application completed for file ${outputFile.path}`);
         } catch (error) {
-            console.error(`ERouter486Plugin: Error in manual template application for file ${outputFile.path}:`, error);
+            console.error(`ERouter486Plugin: Error in template application for file ${outputFile.path}:`, error);
         }
+    }
+
+    private async manualTemplateApplication(outputFile: TFile, templateContent: string, processedContent: string): Promise<void> {
+        const combinedContent = templateContent + '\n' + processedContent;
+        console.debug(`ERouter486Plugin: Combined content length: ${combinedContent.length}`);
+        await this.app.vault.modify(outputFile, combinedContent);
     }
 
     async queueLLMRequest(content: string, prompt: string): Promise<string> {
@@ -365,24 +372,22 @@ export class FileProcessor {
     }
 
     async logOperation(operation: string, filePath: string, rule: MonitoringRule, outputFileName?: string) {
+        const friendlyTime = new Date().toLocaleString('en-US', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit', 
+            hour12: false 
+        });
+        let logEntry = `- ${friendlyTime} ${operation}: [[${filePath}]]`;
         if (outputFileName) {
-            const inputFileLink = `[[${filePath}]]`;
-            const outputFileLink = `[[${outputFileName}]]`;
-            const friendlyTime = new Date().toLocaleString('en-US', { 
-                year: 'numeric', 
-                month: '2-digit', 
-                day: '2-digit', 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit', 
-                hour12: false 
-            });
-            const logEntry = `- ${friendlyTime} ${operation}: ${inputFileLink} → ${outputFileLink}\n  Rule: ${rule.name}\n  Output Template: ${rule.outputFileNameTemplate}\n  Prompt: ${rule.prompt}\n\n`;
-            console.debug(`ERouter486Plugin: ${logEntry.trim()}`);
-            await this.appendToLogFile(logEntry);
-        } else {
-            console.debug(`ERouter486Plugin: No output file created or modified for ${filePath}`);
+            logEntry += ` → [[${outputFileName}]]`;
         }
+        logEntry += `\n  Rule: ${rule.name}\n  Output Template: ${rule.outputFileNameTemplate}\n  Prompt: ${rule.prompt}\n\n`;
+        console.debug(`ERouter486Plugin: ${logEntry.trim()}`);
+        await this.appendToLogFile(logEntry);
     }
 
     async appendToLogFile(content: string) {
