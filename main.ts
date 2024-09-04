@@ -43,7 +43,7 @@ const LLM_PROVIDERS: Record<string, {
     },
     groq: {
         name: 'GROQ',
-        defaultModels: ['llama2-70b-4096', 'mixtral-8x7b-32768'],
+        defaultModels: ['llama2-70b-4096', 'mixtral-8x7b-32768', 'gemma-7b-it'],
         needsEndpoint: true,
         defaultEndpoint: 'https://api.groq.com/openai/v1'
     },
