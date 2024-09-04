@@ -6,9 +6,8 @@ import { FileProcessor } from './fileProcessor';
 
 export default class ERouter486Plugin extends Plugin {
     settings: ERouter486Settings;
-    private fileProcessor: FileProcessor;
+    fileProcessor: FileProcessor;
 
-    // Add this method for testing purposes
     async checkFolder(folder: string, rule: MonitoringRule): Promise<void> {
         await this.fileProcessor.checkFolder(folder, rule);
     }
