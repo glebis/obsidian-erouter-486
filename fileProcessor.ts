@@ -277,11 +277,18 @@ export class FileProcessor {
 
     getOutputFileName(originalName: string, template: string): string {
         const date = new Date();
-        return template
+        let outputName = template
             .replace(/{{filename}}/g, originalName.replace(/\.[^/.]+$/, ""))
             .replace(/{{date}}/g, date.toISOString().split('T')[0])
             .replace(/{{time}}/g, date.toTimeString().split(' ')[0].replace(/:/g, '-'))
             .replace(/{{extension}}/g, originalName.split('.').pop() || '');
+        
+        // Ensure the output file has a .md extension
+        if (!outputName.toLowerCase().endsWith('.md')) {
+            outputName += '.md';
+        }
+        
+        return outputName;
     }
 
     async logOperation(operation: string, filePath: string, rule: MonitoringRule, outputFileName?: string) {
