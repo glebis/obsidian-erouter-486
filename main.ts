@@ -7,6 +7,7 @@ interface MonitoringRule {
     fileNameTemplate: string;
     prompt: string;
     templateFile: string;
+    outputFileNameTemplate: string;
 }
 
 interface ERouter486Settings {
@@ -208,7 +209,8 @@ class ERouter486SettingTab extends PluginSettingTab {
                             delay: 10,
                             fileNameTemplate: '',
                             prompt: '',
-                            templateFile: ''
+                            templateFile: '',
+                            outputFileNameTemplate: '{{filename}}_processed'
                         });
                         this.plugin.saveSettings();
                         this.display();
@@ -302,6 +304,24 @@ class ERouter486SettingTab extends PluginSettingTab {
                         await this.plugin.saveSettings();
                     });
             });
+
+        new Setting(ruleContainer)
+            .setName('Output File Name Template')
+            .setDesc('Enter the template for the output file name')
+            .addText((text: TextComponent) => {
+                text
+                    .setPlaceholder('Enter output file name template')
+                    .setValue(rule.outputFileNameTemplate || '{{filename}}_processed')
+                    .onChange(async (value) => {
+                        rule.outputFileNameTemplate = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        new Setting(ruleContainer)
+            .setName('Output File Name Variables')
+            .setDesc('Available variables: {{filename}}, {{date}}, {{time}}, {{extension}}')
+            .setClass('setting-item-description');
 
         new Setting(ruleContainer)
             .setName('Remove Rule')
