@@ -98,8 +98,8 @@ export class FileProcessor {
             }
 
             const processedContent = await this.queueLLMRequest(content, prompt);
-            await this.saveProcessedContent(file, processedContent, rule);
-            await this.logOperation('process', file.path, rule);
+            const outputFileName = await this.saveProcessedContent(file, processedContent, rule);
+            await this.logOperation('process', file.path, rule, outputFileName);
         } else {
             console.warn(`ERouter486Plugin: File ${file.path} does not exist. Skipping processing.`);
         }
@@ -216,7 +216,7 @@ export class FileProcessor {
         return replacedText;
     }
 
-    async saveProcessedContent(file: TFile, content: string, rule: MonitoringRule) {
+    async saveProcessedContent(file: TFile, content: string, rule: MonitoringRule): Promise<string> {
         const outputFileName = this.getOutputFileName(file.name, rule.outputFileNameTemplate);
         const outputFile = this.app.vault.getAbstractFileByPath(outputFileName);
 
@@ -225,12 +225,12 @@ export class FileProcessor {
                 case 'overwrite':
                     await this.app.vault.modify(outputFile, content);
                     console.debug(`ERouter486Plugin: Overwritten file ${outputFileName}`);
-                    break;
+                    return outputFileName;
                 case 'append':
                     const existingContent = await this.app.vault.read(outputFile);
                     await this.app.vault.modify(outputFile, existingContent + '\n' + content);
                     console.debug(`ERouter486Plugin: Appended to file ${outputFileName}`);
-                    break;
+                    return outputFileName;
                 case 'rename':
                     let newName = outputFileName;
                     let counter = 1;
@@ -240,11 +240,12 @@ export class FileProcessor {
                     }
                     await this.app.vault.create(newName, content);
                     console.debug(`ERouter486Plugin: Created new file ${newName}`);
-                    break;
+                    return newName;
             }
         } else {
             await this.app.vault.create(outputFileName, content);
             console.debug(`ERouter486Plugin: Created new file ${outputFileName}`);
+            return outputFileName;
         }
     }
 
@@ -257,9 +258,19 @@ export class FileProcessor {
             .replace(/{{extension}}/g, originalName.split('.').pop() || '');
     }
 
-    async logOperation(operation: string, filePath: string, rule: MonitoringRule) {
-        const wikiLink = operation === 'create' ? `[[${filePath}]]` : filePath;
-        const logEntry = `- [${new Date().toISOString()}] ${operation}: ${wikiLink} (Rule: ${JSON.stringify(rule)})\n`;
+    async logOperation(operation: string, filePath: string, rule: MonitoringRule, outputFileName?: string) {
+        const inputFileLink = `[[${filePath}]]`;
+        const outputFileLink = outputFileName ? `[[${outputFileName}]]` : '';
+        const friendlyTime = new Date().toLocaleString('en-US', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit', 
+            hour12: false 
+        });
+        const logEntry = `- [${friendlyTime}] ${operation}: ${inputFileLink} → ${outputFileLink} (Rule: ${rule.name})\n`;
         console.debug(`ERouter486Plugin: ${logEntry.trim()}`);
         await this.appendToLogFile(logEntry);
     }
