@@ -152,8 +152,10 @@ export default class ERouter486Plugin extends Plugin {
                 if (rule.enabled && 
                     rule.folders.some(folder => file.path.startsWith(folder)) &&
                     this.matchFileNameTemplate(file.name, rule.fileNameTemplate)) {
-                    console.debug(`ERouter486Plugin: Scheduling processing of file ${file.path} with delay ${rule.delay} seconds`);
+                    console.log(`ERouter486Plugin: Rule applied to file ${file.path}`);
+                    console.log(`ERouter486Plugin: Starting delay of ${rule.delay} seconds before processing`);
                     setTimeout(async () => {
+                        console.log(`ERouter486Plugin: Delay completed. Launching processing for file ${file.path}`);
                         if (await this.app.vault.adapter.exists(file.path)) {
                             await this.processFile(file, rule);
                         } else {
