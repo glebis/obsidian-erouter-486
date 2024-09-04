@@ -1,6 +1,7 @@
 import { TFile, TAbstractFile, Vault } from 'obsidian';
 import { Groq } from 'groq-sdk';
 import { MonitoringRule, ERouter486Settings, QueueItem } from './types';
+import { Notice } from 'obsidian';
 
 export class FileProcessor {
     private fileWatchers: Map<string, NodeJS.Timeout> = new Map();
@@ -140,6 +141,9 @@ export class FileProcessor {
         const maxRetries = 3;
         const delayBetweenRetries = 2000; // 2 seconds
 
+        // Replace file links in the prompt with file contents
+        prompt = await this.replaceFileLinksWithContent(prompt);
+
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 console.debug(`ERouter486Plugin: Making LLM request (attempt ${attempt}/${maxRetries})`);
@@ -172,6 +176,32 @@ export class FileProcessor {
     
         // This line ensures the function always returns a string
         return 'Unexpected error occurred while processing with LLM';
+    }
+
+    private async replaceFileLinksWithContent(text: string): Promise<string> {
+        const linkRegex = /\[\[([^\]]+)\]\]/g;
+        let match;
+        let replacedText = text;
+
+        while ((match = linkRegex.exec(text)) !== null) {
+            const fileName = match[1];
+            const file = this.app.vault.getAbstractFileByPath(fileName);
+
+            if (file instanceof TFile) {
+                try {
+                    const fileContent = await this.app.vault.read(file);
+                    replacedText = replacedText.replace(match[0], fileContent);
+                } catch (error) {
+                    console.error(`ERouter486Plugin: Error reading file ${fileName}:`, error);
+                    new Notice(`Error reading file ${fileName}. The link will be left as is.`);
+                }
+            } else {
+                console.warn(`ERouter486Plugin: File not found: ${fileName}`);
+                new Notice(`File not found: ${fileName}. The link will be left as is.`);
+            }
+        }
+
+        return replacedText;
     }
 
     async saveProcessedContent(file: TFile, content: string, rule: MonitoringRule) {
