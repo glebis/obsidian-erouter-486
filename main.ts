@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ButtonComponent } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ButtonComponent, TextAreaComponent, DropdownComponent, TextComponent } from 'obsidian';
 
 interface ERouter486Settings {
     folders: string[];
@@ -35,27 +35,45 @@ export default class ERouter486Plugin extends Plugin {
         await this.saveData(this.settings);
     }
 
-    async testLLMConnection(): Promise<boolean> {
-        // This is a placeholder implementation. You should replace this with actual API calls to the selected LLM provider.
+    async testLLMConnection(): Promise<{ success: boolean; message: string }> {
+        if (!this.settings.apiKey) {
+            return { success: false, message: 'API key is empty. Please enter a valid API key.' };
+        }
+
+        // This is still a placeholder. Replace with actual API calls for each provider.
         try {
             // Simulating an API call
             await new Promise(resolve => setTimeout(resolve, 1000));
             
-            // For demonstration purposes, we're considering the connection successful if the API key is not empty
-            if (this.settings.apiKey.trim() !== '') {
-                return true;
-            } else {
-                throw new Error('API key is empty');
+            // Add provider-specific logic here
+            switch (this.settings.llmProvider) {
+                case 'openai':
+                    // OpenAI-specific check
+                    break;
+                case 'anthropic':
+                    // Anthropic-specific check
+                    break;
+                case 'groq':
+                    // GROQ-specific check
+                    break;
+                case 'openrouter':
+                    // OpenRouter-specific check
+                    break;
+                default:
+                    throw new Error('Unknown LLM provider');
             }
+
+            return { success: true, message: 'Connection successful!' };
         } catch (error) {
             console.error('LLM connection test failed:', error);
-            return false;
+            return { success: false, message: `Connection failed: ${error.message}` };
         }
     }
 }
 
 class ERouter486SettingTab extends PluginSettingTab {
     plugin: ERouter486Plugin;
+    private apiEndpointSetting: Setting;
 
     constructor(app: App, plugin: ERouter486Plugin) {
         super(app, plugin);
@@ -72,49 +90,62 @@ class ERouter486SettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName('Monitored Folders')
             .setDesc('Enter folder paths to monitor (one per line)')
-            .addTextArea(text => text
-                .setPlaceholder('Enter folder paths')
-                .setValue(this.plugin.settings.folders.join('\n'))
-                .onChange(async (value) => {
-                    this.plugin.settings.folders = value.split('\n').filter(folder => folder.trim() !== '');
-                    await this.plugin.saveSettings();
-                }));
+            .addTextArea((text: TextAreaComponent) => {
+                text
+                    .setPlaceholder('Enter folder paths')
+                    .setValue(this.plugin.settings.folders.join('\n'))
+                    .onChange(async (value) => {
+                        this.plugin.settings.folders = value.split('\n').map(folder => folder.trim()).filter(folder => folder !== '');
+                        await this.plugin.saveSettings();
+                    });
+                text.inputEl.rows = 4;
+                text.inputEl.cols = 50;
+            });
 
         new Setting(containerEl)
             .setName('LLM Provider')
             .setDesc('Select the LLM provider to use')
-            .addDropdown(dropdown => dropdown
-                .addOption('openai', 'OpenAI')
-                .addOption('anthropic', 'Anthropic')
-                .addOption('groq', 'GROQ')
-                .addOption('openrouter', 'OpenRouter')
-                .setValue(this.plugin.settings.llmProvider)
-                .onChange(async (value) => {
-                    this.plugin.settings.llmProvider = value;
-                    await this.plugin.saveSettings();
-                }));
+            .addDropdown((dropdown: DropdownComponent) => {
+                dropdown
+                    .addOption('openai', 'OpenAI')
+                    .addOption('anthropic', 'Anthropic')
+                    .addOption('groq', 'GROQ')
+                    .addOption('openrouter', 'OpenRouter')
+                    .setValue(this.plugin.settings.llmProvider)
+                    .onChange(async (value) => {
+                        this.plugin.settings.llmProvider = value;
+                        await this.plugin.saveSettings();
+                        this.updateApiEndpointVisibility(value);
+                    });
+            });
 
         new Setting(containerEl)
             .setName('API Key')
             .setDesc('Enter the API key for the selected LLM provider')
-            .addText(text => text
-                .setPlaceholder('Enter API key')
-                .setValue(this.plugin.settings.apiKey)
-                .onChange(async (value) => {
-                    this.plugin.settings.apiKey = value;
-                    await this.plugin.saveSettings();
-                }));
+            .addText((text: TextComponent) => {
+                text
+                    .setPlaceholder('Enter API key')
+                    .setValue(this.plugin.settings.apiKey)
+                    .onChange(async (value) => {
+                        this.plugin.settings.apiKey = value.trim();
+                        await this.plugin.saveSettings();
+                    });
+            });
 
-        new Setting(containerEl)
+        this.apiEndpointSetting = new Setting(containerEl)
             .setName('API Endpoint')
             .setDesc('Enter the API endpoint for the selected LLM provider (if applicable)')
-            .addText(text => text
-                .setPlaceholder('Enter API endpoint')
-                .setValue(this.plugin.settings.apiEndpoint)
-                .onChange(async (value) => {
-                    this.plugin.settings.apiEndpoint = value;
-                    await this.plugin.saveSettings();
-                }));
+            .addText((text: TextComponent) => {
+                text
+                    .setPlaceholder('Enter API endpoint')
+                    .setValue(this.plugin.settings.apiEndpoint)
+                    .onChange(async (value) => {
+                        this.plugin.settings.apiEndpoint = value.trim();
+                        await this.plugin.saveSettings();
+                    });
+            });
+
+        this.updateApiEndpointVisibility(this.plugin.settings.llmProvider);
 
         new Setting(containerEl)
             .setName('Test LLM Connection')
@@ -124,15 +155,19 @@ class ERouter486SettingTab extends PluginSettingTab {
                     .setButtonText('Test Connection')
                     .setCta()
                     .onClick(async () => {
+                        button.setButtonText('Testing...');
                         button.setDisabled(true);
-                        const success = await this.plugin.testLLMConnection();
-                        if (success) {
-                            new Notice('LLM connection test successful!');
-                        } else {
-                            new Notice('LLM connection test failed. Please check your settings and try again.');
-                        }
+                        const { success, message } = await this.plugin.testLLMConnection();
+                        new Notice(message);
+                        button.setButtonText('Test Connection');
                         button.setDisabled(false);
                     });
             });
+    }
+
+    updateApiEndpointVisibility(provider: string) {
+        // Show API Endpoint setting only for providers that need it
+        const needsEndpoint = ['openrouter', 'groq'].includes(provider);
+        this.apiEndpointSetting.settingEl.style.display = needsEndpoint ? 'block' : 'none';
     }
 }
