@@ -510,17 +510,3 @@ class ERouter486SettingTab extends PluginSettingTab {
         }
     }
 }
-    addLogSettings(containerEl: HTMLElement): void {
-        new Setting(containerEl)
-            .setName('Log File Path')
-            .setDesc('Enter the path for the log file')
-            .addText((text: TextComponent) => {
-                text
-                    .setPlaceholder('Enter log file path')
-                    .setValue(this.plugin.settings.logFilePath)
-                    .onChange(async (value) => {
-                        this.plugin.settings.logFilePath = value;
-                        await this.plugin.saveSettings();
-                    });
-            });
-    }
