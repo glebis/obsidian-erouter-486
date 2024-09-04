@@ -133,7 +133,7 @@ export class FileProcessor {
                         console.warn('ERouter486Plugin: Templater plugin not found. Applying template manually.');
                         const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
                         if (outputFile instanceof TFile) {
-                            await this.manualTemplateApplication(outputFile, templateContent);
+                            await this.manualTemplateApplication(outputFile, templateContent, processedContent);
                         } else {
                             console.error(`ERouter486Plugin: Output file not found: ${outputFileName}`);
                         }
@@ -168,9 +168,8 @@ export class FileProcessor {
         }
     }
 
-    private async manualTemplateApplication(outputFile: TFile, templateContent: string): Promise<void> {
+    private async manualTemplateApplication(outputFile: TFile, templateContent: string, processedContent: string): Promise<void> {
         try {
-            const processedContent = await this.app.vault.read(outputFile);
             const combinedContent = templateContent + '\n' + processedContent;
             await this.app.vault.modify(outputFile, combinedContent);
             console.debug(`ERouter486Plugin: Manual template application completed`);
