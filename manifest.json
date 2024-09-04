@@ -7,5 +7,6 @@
   "author": "Gleb Kalinin",
   "authorUrl": "https://glebkalinin.com",
   "fundingUrl": "https://glebkalinin.com",
-  "isDesktopOnly": false
+  "isDesktopOnly": false,
+  "main": "main.js"
 }

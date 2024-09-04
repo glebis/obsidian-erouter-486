@@ -16,9 +16,9 @@ The plugin aims to streamline workflows by automatically enhancing, categorizing
 ## TODO List
 
 1. Plugin Setup and Configuration
-   - [ ] Create basic plugin structure
-   - [ ] Implement settings page for folder selection
-   - [ ] Add configuration options for LLM providers (API keys, endpoints)
+   - [x] Create basic plugin structure
+   - [x] Implement settings page for folder selection
+   - [x] Add configuration options for LLM providers (API keys, endpoints)
    - [ ] Create UI for managing prompts and their associated patterns
 
 2. Folder Monitoring
