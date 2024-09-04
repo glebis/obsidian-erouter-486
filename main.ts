@@ -72,6 +72,7 @@ export default class ERouter486Plugin extends Plugin {
     private fileWatchers: Map<string, NodeJS.Timeout> = new Map();
 
     async onload() {
+        console.log('Loading ERouter486Plugin');
         await this.loadSettings();
 
         this.addSettingTab(new ERouter486SettingTab(this.app, this));
@@ -80,7 +81,7 @@ export default class ERouter486Plugin extends Plugin {
         this.registerEvent(this.app.vault.on('modify', this.handleFileChange.bind(this)));
 
         this.startFileMonitoring();
-        console.debug('ERouter486Plugin: Plugin loaded and monitoring started');
+        console.log('ERouter486Plugin: Plugin loaded and monitoring started');
     }
 
     onunload() {
