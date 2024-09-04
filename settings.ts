@@ -175,19 +175,23 @@ export class ERouter486SettingTab extends PluginSettingTab {
     rule: MonitoringRule,
     index: number,
   ): void {
-    const ruleContainer = containerEl.createDiv();
-    ruleContainer.createEl("h4", { text: `Rule ${index + 1}` });
+    const ruleContainer = containerEl.createEl("details");
+    const summary = ruleContainer.createEl("summary");
+    summary.createEl("h4", { text: `Rule ${index + 1}` });
 
-    new Setting(ruleContainer)
+    const ruleContent = ruleContainer.createDiv();
+
+    new Setting(ruleContent)
       .setName("Enable Rule")
       .addToggle((toggle: ToggleComponent) => {
         toggle.setValue(rule.enabled).onChange(async (value) => {
           rule.enabled = value;
           await this.plugin.saveSettings();
+          summary.querySelector("h4").textContent = `Rule ${index + 1} ${value ? "(Enabled)" : "(Disabled)}`;
         });
       });
 
-    new Setting(ruleContainer)
+    new Setting(ruleContent)
       .setName("Monitored Folders")
       .setDesc("Enter folder paths to monitor (one per line)")
       .addTextArea((text: TextAreaComponent) => {
@@ -205,7 +209,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
         text.inputEl.cols = 50;
       });
 
-    new Setting(ruleContainer)
+    new Setting(ruleContent)
       .setName("Processing Delay (seconds)")
       .setDesc("Set the delay before processing files")
       .addText((text: TextComponent) => {
@@ -221,7 +225,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(ruleContainer)
+    new Setting(ruleContent)
       .setName("File Name")
       .setDesc(
         "Enter a regex pattern to match file names (* to monitor all files).",
@@ -236,7 +240,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(ruleContainer)
+    new Setting(ruleContent)
       .setName("Prompt")
       .setDesc("Enter the prompt to be applied. Press Ctrl+[ to insert a file link.")
       .addTextArea((text: TextAreaComponent) => {
@@ -266,7 +270,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
         });
       });
 
-    new Setting(ruleContainer)
+    new Setting(ruleContent)
       .setName("Template File")
       .setDesc("Select an optional template file")
       .addText((text: TextComponent) => {
@@ -284,13 +288,13 @@ export class ERouter486SettingTab extends PluginSettingTab {
           .onClick(async () => {
             new FileSuggestModal(this.app, (file: TFile) => {
               rule.templateFile = file.path;
-              (ruleContainer.querySelectorAll('.setting-item')[6].querySelector('input') as HTMLInputElement).value = file.path;
+              (ruleContent.querySelectorAll('.setting-item')[4].querySelector('input') as HTMLInputElement).value = file.path;
               this.plugin.saveSettings();
             }).open();
           });
       });
 
-    new Setting(ruleContainer)
+    new Setting(ruleContent)
       .setName("Output File Name")
       .setDesc("Enter the template for the output file name")
       .addText((text: TextComponent) => {
@@ -303,14 +307,14 @@ export class ERouter486SettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(ruleContainer)
+    new Setting(ruleContent)
       .setName("Output File Name Variables")
       .setDesc(
         "Available variables: {{filename}}, {{date}}, {{time}}, {{extension}}",
       )
       .setClass("setting-item-description");
 
-    new Setting(ruleContainer)
+    new Setting(ruleContent)
       .setName("Output File Handling")
       .setDesc("Choose how to handle existing output files")
       .addDropdown((dropdown: DropdownComponent) => {
@@ -328,7 +332,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(ruleContainer)
+    new Setting(ruleContent)
       .setName("Remove Rule")
       .addButton((button: ButtonComponent) => {
         button
