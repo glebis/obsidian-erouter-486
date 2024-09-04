@@ -260,7 +260,8 @@ export default class ERouter486Plugin extends Plugin {
     }
 
     async logOperation(operation: string, filePath: string, rule: MonitoringRule) {
-        const logEntry = `[${new Date().toISOString()}] ${operation}: ${filePath} (Rule: ${JSON.stringify(rule)})\n`;
+        const wikiLink = operation === 'create' ? `[[${filePath}]]` : filePath;
+        const logEntry = `- [${new Date().toISOString()}] ${operation}: ${wikiLink} (Rule: ${JSON.stringify(rule)})\n`;
         console.debug(`ERouter486Plugin: ${logEntry.trim()}`);
         await this.appendToLogFile(logEntry);
     }
