@@ -307,7 +307,10 @@ export class ERouter486SettingTab extends PluginSettingTab {
           .onClick(async () => {
             new FileSuggestModal(this.app, (file: TFile) => {
               rule.templateFile = file.path;
-              (ruleContent.querySelectorAll('.setting-item')[4].querySelector('input') as HTMLInputElement).value = file.path;
+              const inputElement = ruleContent.querySelectorAll('.setting-item')[4].querySelector('input') as HTMLInputElement | null;
+              if (inputElement) {
+                inputElement.value = file.path;
+              }
               this.plugin.saveSettings();
             }).open();
           });
