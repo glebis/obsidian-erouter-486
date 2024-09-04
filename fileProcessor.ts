@@ -320,7 +320,7 @@ export class FileProcessor {
                 second: '2-digit', 
                 hour12: false 
             });
-            const logEntry = `- [${friendlyTime}] ${operation}: ${inputFileLink} → ${outputFileLink} (Rule: ${rule.name})\n`;
+            const logEntry = `- ${friendlyTime} ${operation}: ${inputFileLink} → ${outputFileLink}\n  Rule: ${rule.name}\n  Output Template: ${rule.outputFileNameTemplate}\n  Prompt: ${rule.prompt}\n\n`;
             console.debug(`ERouter486Plugin: ${logEntry.trim()}`);
             await this.appendToLogFile(logEntry);
         } else {
