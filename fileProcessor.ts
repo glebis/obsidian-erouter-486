@@ -1,6 +1,6 @@
 import { TFile, TAbstractFile, Vault } from 'obsidian';
 import { Groq } from 'groq-sdk';
-import { MonitoringRule, ERouter486Settings } from './types';
+import { MonitoringRule, ERouter486Settings, QueueItem } from './types';
 
 export class FileProcessor {
     private fileWatchers: Map<string, NodeJS.Timeout> = new Map();
@@ -33,7 +33,7 @@ export class FileProcessor {
     }
 
     async checkFolder(folder: string, rule: MonitoringRule) {
-        const files = this.app.vault.getFiles().filter(file => 
+        const files = this.app.vault.getFiles().filter((file: TFile) => 
             file.path.startsWith(folder) && 
             this.matchFileNameTemplate(file.name, rule.fileNameTemplate)
         );
@@ -158,10 +158,10 @@ export class FileProcessor {
                 console.error(`ERouter486Plugin: Error processing with LLM (attempt ${attempt}/${maxRetries}):`, error);
             
                 if (attempt === maxRetries) {
-                    return `Error processing content after ${maxRetries} attempts: ${error.message}`;
+                    return `Error processing content after ${maxRetries} attempts: ${(error as Error).message}`;
                 }
 
-                if (error.message.includes('429')) {
+                if ((error as Error).message.includes('429')) {
                     console.debug(`ERouter486Plugin: Rate limit reached. Waiting ${delayBetweenRetries}ms before retrying...`);
                     await new Promise(resolve => setTimeout(resolve, delayBetweenRetries));
                 } else {

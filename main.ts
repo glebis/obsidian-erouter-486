@@ -8,6 +8,12 @@ export default class ERouter486Plugin extends Plugin {
     settings: ERouter486Settings;
     private fileProcessor: FileProcessor;
 
+    constructor(app: App, manifest: PluginManifest) {
+        super(app, manifest);
+        this.settings = DEFAULT_SETTINGS;
+        this.fileProcessor = new FileProcessor(this.app, this.settings);
+    }
+
     async onload() {
         console.log('Loading ERouter486Plugin');
         await this.loadSettings();
@@ -71,7 +77,7 @@ export default class ERouter486Plugin extends Plugin {
             }
         } catch (error) {
             console.error('GROQ connection test failed:', error);
-            return { success: false, message: `Connection to GROQ failed: ${error.message}` };
+            return { success: false, message: `Connection to GROQ failed: ${(error as Error).message}` };
         }
     }
 

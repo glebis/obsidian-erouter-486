@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, ButtonComponent, TextAreaComponent, DropdownComponent, TextComponent, ToggleComponent } from 'obsidian';
+import { App, PluginSettingTab, Setting, ButtonComponent, TextAreaComponent, DropdownComponent, TextComponent, ToggleComponent, Notice } from 'obsidian';
 import ERouter486Plugin from './main';
 import { MonitoringRule, ERouter486Settings, DEFAULT_SETTINGS, LLM_PROVIDERS } from './types';
 
@@ -10,6 +10,8 @@ export class ERouter486SettingTab extends PluginSettingTab {
     constructor(app: App, plugin: ERouter486Plugin) {
         super(app, plugin);
         this.plugin = plugin;
+        this.apiEndpointSetting = new Setting(this.containerEl);
+        this.modelNameSetting = new Setting(this.containerEl);
     }
 
     display(): void {
