@@ -65,29 +65,20 @@ export class FileProcessor {
 
     async handleFileChange(file: TAbstractFile) {
         if (file instanceof TFile && await this.app.vault.adapter.exists(file.path)) {
-            const stat = await this.app.vault.adapter.stat(file.path);
-            if (stat) {
-                const fileModTime = stat.mtime;
-
-                if (fileModTime > this.pluginInitTime) {
-                    for (const rule of this.settings.monitoringRules) {
-                        if (rule.enabled && 
-                            rule.folders.some(folder => file.path.startsWith(folder)) &&
-                            this.matchFileNameTemplate(file.name, rule.fileNameTemplate)) {
-                            console.log(`ERouter486Plugin: Rule applied to file ${file.path}`);
-                            console.log(`ERouter486Plugin: Starting delay of ${rule.delay} seconds before processing`);
-                            setTimeout(async () => {
-                                console.log(`ERouter486Plugin: Delay completed. Launching processing for file ${file.path}`);
-                                if (await this.app.vault.adapter.exists(file.path)) {
-                                    await this.processFile(file, rule);
-                                } else {
-                                    console.warn(`ERouter486Plugin: File ${file.path} no longer exists. Skipping processing.`);
-                                }
-                            }, rule.delay * 1000);
+            for (const rule of this.settings.monitoringRules) {
+                if (rule.enabled && 
+                    rule.folders.some(folder => file.path.startsWith(folder)) &&
+                    this.matchFileNameTemplate(file.name, rule.fileNameTemplate)) {
+                    console.log(`ERouter486Plugin: Rule applied to file ${file.path}`);
+                    console.log(`ERouter486Plugin: Starting delay of ${rule.delay} seconds before processing`);
+                    setTimeout(async () => {
+                        console.log(`ERouter486Plugin: Delay completed. Launching processing for file ${file.path}`);
+                        if (await this.app.vault.adapter.exists(file.path)) {
+                            await this.processFile(file, rule);
+                        } else {
+                            console.warn(`ERouter486Plugin: File ${file.path} no longer exists. Skipping processing.`);
                         }
-                    }
-                } else {
-                    console.log(`ERouter486Plugin: File ${file.path} was not modified after plugin initialization. Skipping processing.`);
+                    }, rule.delay * 1000);
                 }
             }
         } else if (file instanceof TFile) {
