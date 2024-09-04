@@ -11,7 +11,11 @@ describe('ERouter486Plugin File Monitoring', () => {
             getFiles: jest.fn(),
             on: jest.fn()
         } as unknown as jest.Mocked<Vault>;
-        const mockApp = { vault: mockVault } as App;
+        const mockApp = {
+            vault: mockVault,
+            workspace: {} as any,
+            metadataCache: {} as any,
+        } as unknown as App;
         const mockManifest = {} as any;
         plugin = new ERouter486Plugin(mockApp, mockManifest);
         plugin.app = mockApp;
