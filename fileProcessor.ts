@@ -10,12 +10,9 @@ export class FileProcessor {
     private isProcessingQueue: boolean = false;
     private lastRequestTime: number = 0;
     private readonly REQUEST_INTERVAL = 15000; // 15 seconds in milliseconds
-    private pluginInitTime: number;
     private lastProcessedTimes: Map<string, number> = new Map();
 
-    constructor(private app: any, private settings: ERouter486Settings) {
-        this.pluginInitTime = Date.now();
-    }
+    constructor(private app: any, private settings: ERouter486Settings) {}
 
     startFileMonitoring() {
         this.settings.monitoringRules.forEach(rule => {
