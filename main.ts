@@ -189,6 +189,9 @@ export default class ERouter486Plugin extends Plugin {
                 }
             }
         }
+        
+        // This line ensures the function always returns a string
+        return 'Unexpected error occurred while processing with LLM';
     }
 
     async saveProcessedContent(file: TFile, content: string, rule: MonitoringRule) {
