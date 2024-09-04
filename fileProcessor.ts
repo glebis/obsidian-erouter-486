@@ -125,9 +125,13 @@ export class FileProcessor {
                 if (rule.deleteSourceFile) {
                     console.debug(`ERouter486Plugin: Attempting to delete source file ${file.path}`);
                     try {
-                        await this.app.vault.delete(file);
-                        console.debug(`ERouter486Plugin: Source file ${file.path} deleted successfully`);
-                        await this.logOperation('delete', file.path, rule);
+                        if (await this.app.vault.adapter.exists(file.path)) {
+                            await this.app.vault.delete(file);
+                            console.debug(`ERouter486Plugin: Source file ${file.path} deleted successfully`);
+                            await this.logOperation('delete', file.path, rule);
+                        } else {
+                            console.warn(`ERouter486Plugin: Source file ${file.path} no longer exists. Skipping deletion.`);
+                        }
                     } catch (error) {
                         console.error(`ERouter486Plugin: Failed to delete source file ${file.path}:`, error);
                     }
