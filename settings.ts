@@ -50,6 +50,36 @@ export class ERouter486SettingTab extends PluginSettingTab {
     this.plugin = plugin;
     this.apiEndpointSetting = new Setting(this.containerEl);
     this.modelNameSetting = new Setting(this.containerEl);
+
+    // Add CSS styles
+    const style = document.createElement('style');
+    style.textContent = `
+      .rule-summary {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+      }
+      .rule-number {
+        font-weight: bold;
+        margin-right: 5px;
+      }
+      .rule-name-input {
+        border: none;
+        background: transparent;
+        font-size: 1em;
+        font-weight: bold;
+        width: 200px;
+      }
+      .rule-name-input:focus {
+        outline: none;
+        border-bottom: 1px solid var(--text-accent);
+      }
+      .rule-name-input.disabled {
+        color: var(--text-muted);
+        text-decoration: line-through;
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   display(): void {
@@ -176,8 +206,18 @@ export class ERouter486SettingTab extends PluginSettingTab {
     index: number,
   ): void {
     const ruleContainer = containerEl.createEl("details");
-    const summary = ruleContainer.createEl("summary");
-    summary.createEl("h4", { text: `Rule ${index + 1}` });
+    const summary = ruleContainer.createEl("summary", { cls: "rule-summary" });
+    summary.createSpan({ text: `Rule ${index + 1}: `, cls: "rule-number" });
+    const ruleName = summary.createEl("input", {
+      type: "text",
+      value: rule.name || `Rule ${index + 1}`,
+      cls: "rule-name-input",
+    });
+
+    ruleName.addEventListener("change", async (event) => {
+      rule.name = (event.target as HTMLInputElement).value;
+      await this.plugin.saveSettings();
+    });
 
     const ruleContent = ruleContainer.createDiv();
 
@@ -187,12 +227,9 @@ export class ERouter486SettingTab extends PluginSettingTab {
         toggle.setValue(rule.enabled).onChange(async (value) => {
           rule.enabled = value;
           await this.plugin.saveSettings();
-          const h4 = summary.querySelector("h4");
-          if (h4) {
-            h4.textContent = `Rule ${index + 1} ${value ? "(Enabled)" : "(Disabled)"}`;
-          }
+          ruleName.classList.toggle("disabled", !value);
         });
-      })
+      });
 
     new Setting(ruleContent)
       .setName("Monitored Folders")
