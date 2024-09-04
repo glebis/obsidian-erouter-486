@@ -352,6 +352,18 @@ export class ERouter486SettingTab extends PluginSettingTab {
       });
 
     new Setting(ruleContent)
+      .setName("Delete Source File")
+      .setDesc("Delete the source file after processing")
+      .addToggle((toggle: ToggleComponent) => {
+        toggle
+          .setValue(rule.deleteSourceFile || false)
+          .onChange(async (value) => {
+            rule.deleteSourceFile = value;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    new Setting(ruleContent)
       .setName("Remove Rule")
       .addButton((button: ButtonComponent) => {
         button

@@ -9,9 +9,11 @@ export interface MonitoringRule {
     outputFileNameTemplate: string;
     outputFileName: string;
     outputFileHandling: 'overwrite' | 'append' | 'rename';
+    deleteSourceFile: boolean;
 }
 
 export interface MonitoringRule {
+    name: string;
     enabled: boolean;
     folders: string[];
     delay: number;
@@ -46,7 +48,8 @@ export const DEFAULT_SETTINGS: ERouter486Settings = {
         templateFile: '',
         outputFileNameTemplate: '{{filename}}_processed',
         outputFileName: '',
-        outputFileHandling: 'append'
+        outputFileHandling: 'append',
+        deleteSourceFile: false
     }],
     logFilePath: 'erouter_log.md'
 }

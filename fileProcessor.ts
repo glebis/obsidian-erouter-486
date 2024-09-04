@@ -116,6 +116,17 @@ export class FileProcessor {
                 console.debug(`ERouter486Plugin: Content saved successfully to ${outputFileName}`);
                 await this.logOperation('process', file.path, rule, outputFileName);
                 this.lastProcessedTimes.set(file.path, Date.now());
+                
+                if (rule.deleteSourceFile) {
+                    console.debug(`ERouter486Plugin: Attempting to delete source file ${file.path}`);
+                    try {
+                        await this.app.vault.delete(file);
+                        console.debug(`ERouter486Plugin: Source file ${file.path} deleted successfully`);
+                        await this.logOperation('delete', file.path, rule);
+                    } catch (error) {
+                        console.error(`ERouter486Plugin: Failed to delete source file ${file.path}:`, error);
+                    }
+                }
             } else {
                 console.error(`ERouter486Plugin: Failed to save processed content`);
             }
