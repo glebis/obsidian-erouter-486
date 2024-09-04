@@ -65,8 +65,6 @@ const LLM_PROVIDERS: Record<string, {
     }
 };
 
-import { TAbstractFile, TFile, Vault } from 'obsidian';
-
 export default class ERouter486Plugin extends Plugin {
     settings: ERouter486Settings;
     private fileWatchers: Map<string, NodeJS.Timeout> = new Map();
