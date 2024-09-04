@@ -8,6 +8,7 @@ interface MonitoringRule {
     prompt: string;
     templateFile: string;
     outputFileNameTemplate: string;
+    outputFileHandling: 'overwrite' | 'append' | 'rename';
 }
 
 interface ERouter486Settings {
@@ -23,7 +24,16 @@ const DEFAULT_SETTINGS: ERouter486Settings = {
     apiKey: '',
     apiEndpoint: '',
     modelName: '',
-    monitoringRules: []
+    monitoringRules: [{
+        enabled: true,
+        folders: [],
+        delay: 10,
+        fileNameTemplate: '*',
+        prompt: '',
+        templateFile: '',
+        outputFileNameTemplate: '{{filename}}_processed',
+        outputFileHandling: 'append'
+    }]
 }
 
 const LLM_PROVIDERS: Record<string, {
@@ -53,17 +63,117 @@ const LLM_PROVIDERS: Record<string, {
     }
 };
 
+import { TAbstractFile, TFile, Vault } from 'obsidian';
+
 export default class ERouter486Plugin extends Plugin {
     settings: ERouter486Settings;
+    private fileWatchers: Map<string, NodeJS.Timeout> = new Map();
 
     async onload() {
         await this.loadSettings();
 
         this.addSettingTab(new ERouter486SettingTab(this.app, this));
 
-        // TODO: Implement folder monitoring
-        // TODO: Implement LLM integration
-        // TODO: Implement prompt management
+        this.registerEvent(this.app.vault.on('create', this.handleFileChange.bind(this)));
+        this.registerEvent(this.app.vault.on('modify', this.handleFileChange.bind(this)));
+
+        this.startFileMonitoring();
+    }
+
+    onunload() {
+        this.stopFileMonitoring();
+    }
+
+    private startFileMonitoring() {
+        this.settings.monitoringRules.forEach(rule => {
+            if (rule.enabled) {
+                rule.folders.forEach(folder => {
+                    const watcher = setInterval(() => this.checkFolder(folder, rule), rule.delay * 1000);
+                    this.fileWatchers.set(`${folder}-${rule.fileNameTemplate}`, watcher);
+                });
+            }
+        });
+    }
+
+    private stopFileMonitoring() {
+        this.fileWatchers.forEach(watcher => clearInterval(watcher));
+        this.fileWatchers.clear();
+    }
+
+    private async checkFolder(folder: string, rule: MonitoringRule) {
+        const files = this.app.vault.getFiles().filter(file => 
+            file.path.startsWith(folder) && 
+            this.matchFileNameTemplate(file.name, rule.fileNameTemplate)
+        );
+
+        for (const file of files) {
+            await this.processFile(file, rule);
+        }
+    }
+
+    private matchFileNameTemplate(fileName: string, template: string): boolean {
+        const regex = new RegExp('^' + template.replace(/\*/g, '.*') + '$');
+        return regex.test(fileName);
+    }
+
+    private async handleFileChange(file: TAbstractFile) {
+        if (file instanceof TFile) {
+            for (const rule of this.settings.monitoringRules) {
+                if (rule.enabled && 
+                    rule.folders.some(folder => file.path.startsWith(folder)) &&
+                    this.matchFileNameTemplate(file.name, rule.fileNameTemplate)) {
+                    await this.processFile(file, rule);
+                }
+            }
+        }
+    }
+
+    private async processFile(file: TFile, rule: MonitoringRule) {
+        const content = await this.app.vault.read(file);
+        const processedContent = await this.processWithLLM(content, rule.prompt);
+        await this.saveProcessedContent(file, processedContent, rule);
+    }
+
+    private async processWithLLM(content: string, prompt: string): Promise<string> {
+        // TODO: Implement actual LLM processing
+        return `Processed: ${content}\nWith prompt: ${prompt}`;
+    }
+
+    private async saveProcessedContent(file: TFile, content: string, rule: MonitoringRule) {
+        const outputFileName = this.getOutputFileName(file.name, rule.outputFileNameTemplate);
+        const outputFile = this.app.vault.getAbstractFileByPath(outputFileName);
+
+        if (outputFile instanceof TFile) {
+            switch (rule.outputFileHandling) {
+                case 'overwrite':
+                    await this.app.vault.modify(outputFile, content);
+                    break;
+                case 'append':
+                    const existingContent = await this.app.vault.read(outputFile);
+                    await this.app.vault.modify(outputFile, existingContent + '\n' + content);
+                    break;
+                case 'rename':
+                    let newName = outputFileName;
+                    let counter = 1;
+                    while (this.app.vault.getAbstractFileByPath(newName)) {
+                        newName = `${outputFileName}_${counter}`;
+                        counter++;
+                    }
+                    await this.app.vault.create(newName, content);
+                    break;
+            }
+        } else {
+            await this.app.vault.create(outputFileName, content);
+        }
+    }
+
+    private getOutputFileName(originalName: string, template: string): string {
+        const date = new Date();
+        return template
+            .replace(/{{filename}}/g, originalName.replace(/\.[^/.]+$/, ""))
+            .replace(/{{date}}/g, date.toISOString().split('T')[0])
+            .replace(/{{time}}/g, date.toTimeString().split(' ')[0].replace(/:/g, '-'))
+            .replace(/{{extension}}/g, originalName.split('.').pop() || '');
     }
 
     async loadSettings() {
@@ -322,6 +432,21 @@ class ERouter486SettingTab extends PluginSettingTab {
             .setName('Output File Name Variables')
             .setDesc('Available variables: {{filename}}, {{date}}, {{time}}, {{extension}}')
             .setClass('setting-item-description');
+
+        new Setting(ruleContainer)
+            .setName('Output File Handling')
+            .setDesc('Choose how to handle existing output files')
+            .addDropdown((dropdown: DropdownComponent) => {
+                dropdown
+                    .addOption('overwrite', 'Overwrite')
+                    .addOption('append', 'Append')
+                    .addOption('rename', 'Rename')
+                    .setValue(rule.outputFileHandling || 'append')
+                    .onChange(async (value) => {
+                        rule.outputFileHandling = value as 'overwrite' | 'append' | 'rename';
+                        await this.plugin.saveSettings();
+                    });
+            });
 
         new Setting(ruleContainer)
             .setName('Remove Rule')
