@@ -320,7 +320,8 @@ class ERouter486SettingTab extends PluginSettingTab {
                             fileNameTemplate: '',
                             prompt: '',
                             templateFile: '',
-                            outputFileNameTemplate: '{{filename}}_processed'
+                            outputFileNameTemplate: '{{filename}}_processed',
+                            outputFileHandling: 'append'
                         });
                         this.plugin.saveSettings();
                         this.display();
