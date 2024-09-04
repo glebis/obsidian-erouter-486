@@ -92,9 +92,22 @@ export class FileProcessor {
 
             if (rule.templateFile && await this.app.vault.adapter.exists(rule.templateFile)) {
                 console.debug(`ERouter486Plugin: Using template file ${rule.templateFile}`);
-                const templateContent = await this.app.vault.read(this.app.vault.getAbstractFileByPath(rule.templateFile) as TFile);
-                const template = Handlebars.compile(templateContent);
-                prompt = template({ content, fileName: file.name, filePath: file.path });
+                const templateFile = this.app.vault.getAbstractFileByPath(rule.templateFile) as TFile;
+                const templateContent = await this.app.vault.read(templateFile);
+                
+                // Process the template with Templater
+                const templater = this.app.plugins.plugins['templater-obsidian'];
+                if (templater) {
+                    prompt = await templater.templater.parse_template({ target_file: file, run_mode: 4 }, templateContent);
+                } else {
+                    console.warn('ERouter486Plugin: Templater plugin not found. Using raw template content.');
+                    prompt = templateContent;
+                }
+                
+                // Replace placeholders with actual content
+                prompt = prompt.replace(/{{content}}/g, content)
+                               .replace(/{{fileName}}/g, file.name)
+                               .replace(/{{filePath}}/g, file.path);
             } else {
                 console.debug(`ERouter486Plugin: No template file used or file doesn't exist`);
             }

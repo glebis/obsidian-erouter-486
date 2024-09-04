@@ -7,7 +7,7 @@ The eRouter 486 plugin for Obsidian is a powerful tool that automates file proce
 
 - **Flexible Monitoring Rules**: Set up multiple rules to monitor different folders and file types.
 - **LLM Integration**: Currently supports GROQ as the LLM provider, with plans to expand to other providers in the future.
-- **Customizable Processing**: Define custom prompts and use template files for consistent processing.
+- **Customizable Processing**: Define custom prompts and use template files for consistent processing. Supports Templater syntax if the Templater plugin is installed.
 - **Output Control**: Specify output file naming conventions and handling methods (overwrite, append, or rename).
 - **Source File Management**: Option to delete source files after processing.
 - **Logging**: Keeps a detailed log of all processing activities.
