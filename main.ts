@@ -151,9 +151,10 @@ export default class ERouter486Plugin extends Plugin {
     async handleFileChange(file: TAbstractFile) {
         if (file instanceof TFile && await this.app.vault.adapter.exists(file.path)) {
             const stat = await this.app.vault.adapter.stat(file.path);
-            const fileModTime = stat.mtime;
+            if (stat) {
+                const fileModTime = stat.mtime;
 
-            if (fileModTime > this.pluginInitTime) {
+                if (fileModTime > this.pluginInitTime) {
                 for (const rule of this.settings.monitoringRules) {
                     if (rule.enabled && 
                         rule.folders.some(folder => file.path.startsWith(folder)) &&
