@@ -68,6 +68,7 @@ const LLM_PROVIDERS: Record<string, {
 export default class ERouter486Plugin extends Plugin {
     settings: ERouter486Settings;
     private fileWatchers: Map<string, NodeJS.Timeout> = new Map();
+    public app: App;
 
     async onload() {
         console.log('Loading ERouter486Plugin');

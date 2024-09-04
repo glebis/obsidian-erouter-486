@@ -11,9 +11,10 @@ describe('ERouter486Plugin File Monitoring', () => {
             getFiles: jest.fn(),
             on: jest.fn()
         } as unknown as jest.Mocked<Vault>;
-        const mockApp = { vault: mockVault } as any;
+        const mockApp = { vault: mockVault } as App;
         const mockManifest = {} as any;
         plugin = new ERouter486Plugin(mockApp, mockManifest);
+        plugin.app = mockApp;
         plugin.settings = {
             monitoringRules: [
                 {
@@ -60,11 +61,11 @@ describe('ERouter486Plugin File Monitoring', () => {
             name: 'test-file.md'
         } as TFile;
 
-        (mockVault.getFiles as jest.Mock).mockReturnValue([mockFile]);
+        mockVault.getFiles.mockReturnValue([mockFile]);
 
         const processFileSpy = jest.spyOn(plugin as any, 'processFile').mockResolvedValue(undefined);
 
-        await (plugin as any).checkFolder('test-folder', plugin.settings.monitoringRules[0]);
+        await plugin.checkFolder('test-folder', plugin.settings.monitoringRules[0]);
 
         expect(processFileSpy).toHaveBeenCalledWith(mockFile, plugin.settings.monitoringRules[0]);
     });
