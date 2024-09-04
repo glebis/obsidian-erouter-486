@@ -51,35 +51,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
     this.apiEndpointSetting = new Setting(this.containerEl);
     this.modelNameSetting = new Setting(this.containerEl);
 
-    // Add CSS styles
-    const style = document.createElement('style');
-    style.textContent = `
-      .rule-summary {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-      }
-      .rule-number {
-        font-weight: bold;
-        margin-right: 5px;
-      }
-      .rule-name-input {
-        border: none;
-        background: transparent;
-        font-size: 1em;
-        font-weight: bold;
-        width: 200px;
-      }
-      .rule-name-input:focus {
-        outline: none;
-        border-bottom: 1px solid var(--text-accent);
-      }
-      .rule-name-input.disabled {
-        color: var(--text-muted);
-        text-decoration: line-through;
-      }
-    `;
-    document.head.appendChild(style);
+    // CSS styles have been moved to styles.css
   }
 
   display(): void {
