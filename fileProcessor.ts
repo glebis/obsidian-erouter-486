@@ -90,28 +90,6 @@ export class FileProcessor {
             console.debug(`ERouter486Plugin: File content read, length: ${content.length}`);
             let prompt = rule.prompt;
 
-            if (rule.templateFile && await this.app.vault.adapter.exists(rule.templateFile)) {
-                console.debug(`ERouter486Plugin: Using template file ${rule.templateFile}`);
-                const templateFile = this.app.vault.getAbstractFileByPath(rule.templateFile) as TFile;
-                const templateContent = await this.app.vault.read(templateFile);
-                
-                // Process the template with Templater
-                const templater = this.app.plugins.plugins['templater-obsidian'];
-                if (templater) {
-                    prompt = await templater.templater.parse_template({ target_file: file, run_mode: 4 }, templateContent);
-                } else {
-                    console.warn('ERouter486Plugin: Templater plugin not found. Using raw template content.');
-                    prompt = templateContent;
-                }
-                
-                // Replace placeholders with actual content
-                prompt = prompt.replace(/{{content}}/g, content)
-                               .replace(/{{fileName}}/g, file.name)
-                               .replace(/{{filePath}}/g, file.path);
-            } else {
-                console.debug(`ERouter486Plugin: No template file used or file doesn't exist`);
-            }
-
             console.debug(`ERouter486Plugin: Sending content to LLM for processing`);
             const processedContent = await this.queueLLMRequest(content, prompt);
             console.debug(`ERouter486Plugin: Received processed content from LLM, length: ${processedContent.length}`);
@@ -120,6 +98,25 @@ export class FileProcessor {
             const outputFileName = await this.saveProcessedContent(file, processedContent, rule);
             if (outputFileName) {
                 console.debug(`ERouter486Plugin: Content saved successfully to ${outputFileName}`);
+                
+                if (rule.templateFile && await this.app.vault.adapter.exists(rule.templateFile)) {
+                    console.debug(`ERouter486Plugin: Using template file ${rule.templateFile}`);
+                    const templateFile = this.app.vault.getAbstractFileByPath(rule.templateFile) as TFile;
+                    const templateContent = await this.app.vault.read(templateFile);
+                    
+                    // Process the template with Templater
+                    const templater = this.app.plugins.plugins['templater-obsidian'];
+                    if (templater) {
+                        const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
+                        await templater.templater.append_template_to_active_file(templateFile, outputFile);
+                        console.debug(`ERouter486Plugin: Template applied to output file using Templater`);
+                    } else {
+                        console.warn('ERouter486Plugin: Templater plugin not found. Template not applied.');
+                    }
+                } else {
+                    console.debug(`ERouter486Plugin: No template file used or file doesn't exist`);
+                }
+
                 await this.logOperation('process', file.path, rule, outputFileName);
                 this.lastProcessedTimes.set(file.path, Date.now());
                 
