@@ -330,6 +330,19 @@ export class ERouter486SettingTab extends PluginSettingTab {
       });
 
     new Setting(ruleContent)
+      .setName("Output File Name")
+      .setDesc("Enter the name for the output file")
+      .addText((text: TextComponent) => {
+        text
+          .setPlaceholder("Enter output file name")
+          .setValue(rule.outputFileName || "")
+          .onChange(async (value) => {
+            rule.outputFileName = value;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    new Setting(ruleContent)
       .setName("Output File Name Variables")
       .setDesc(
         "Available variables: {{filename}}, {{date}}, {{time}}, {{extension}}, {{yyyy}}, {{MM}}, {{dd}}, {{HH}}, {{mm}}, {{ss}}",

@@ -7,6 +7,7 @@ export interface MonitoringRule {
     prompt: string;
     templateFile: string;
     outputFileNameTemplate: string;
+    outputFileName: string;
     outputFileHandling: 'overwrite' | 'append' | 'rename';
 }
 
@@ -44,6 +45,7 @@ export const DEFAULT_SETTINGS: ERouter486Settings = {
         prompt: '',
         templateFile: '',
         outputFileNameTemplate: '{{filename}}_processed',
+        outputFileName: '',
         outputFileHandling: 'append'
     }],
     logFilePath: 'erouter_log.md'
