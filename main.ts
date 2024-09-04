@@ -25,7 +25,12 @@ const DEFAULT_SETTINGS: ERouter486Settings = {
     monitoringRules: []
 }
 
-const LLM_PROVIDERS = {
+const LLM_PROVIDERS: Record<string, {
+    name: string;
+    defaultModels: string[];
+    needsEndpoint: boolean;
+    defaultEndpoint?: string;
+}> = {
     openai: {
         name: 'OpenAI',
         defaultModels: ['gpt-3.5-turbo', 'gpt-4'],
@@ -180,7 +185,7 @@ class ERouter486SettingTab extends PluginSettingTab {
             .addDropdown((dropdown: DropdownComponent) => {
                 const providerInfo = this.plugin.getProviderInfo(this.plugin.settings.llmProvider);
                 if (providerInfo) {
-                    providerInfo.defaultModels.forEach(model => {
+                    providerInfo.defaultModels.forEach((model: string) => {
                         dropdown.addOption(model, model);
                     });
                 }
@@ -345,12 +350,12 @@ class ERouter486SettingTab extends PluginSettingTab {
         if (providerInfo) {
             this.apiEndpointSetting.settingEl.style.display = providerInfo.needsEndpoint ? 'block' : 'none';
             if (providerInfo.needsEndpoint && providerInfo.defaultEndpoint) {
-                this.apiEndpointSetting.components[0].setValue(providerInfo.defaultEndpoint);
+                (this.apiEndpointSetting.components[0] as TextComponent).setValue(providerInfo.defaultEndpoint);
             }
 
             const dropdown = this.modelNameSetting.components[0] as DropdownComponent;
             dropdown.selectEl.empty();
-            providerInfo.defaultModels.forEach(model => {
+            providerInfo.defaultModels.forEach((model: string) => {
                 dropdown.addOption(model, model);
             });
             dropdown.setValue(providerInfo.defaultModels[0]);
