@@ -234,21 +234,6 @@ export default class ERouter486Plugin extends Plugin {
     getProviderInfo(provider: string) {
         return LLM_PROVIDERS[provider] || null;
     }
-
-    addLogSettings(containerEl: HTMLElement): void {
-        new Setting(containerEl)
-            .setName('Log File Name')
-            .setDesc('Enter the name of the log file (including extension)')
-            .addText((text: TextComponent) => {
-                text
-                    .setPlaceholder('Enter log file name')
-                    .setValue(this.plugin.settings.logFilePath)
-                    .onChange(async (value) => {
-                        this.plugin.settings.logFilePath = value.trim();
-                        await this.plugin.saveSettings();
-                    });
-            });
-    }
 }
 
 class ERouter486SettingTab extends PluginSettingTab {
@@ -523,5 +508,20 @@ class ERouter486SettingTab extends PluginSettingTab {
             });
             dropdown.setValue('llama-3.1-8b-instant');
         }
+    }
+
+    addLogSettings(containerEl: HTMLElement): void {
+        new Setting(containerEl)
+            .setName('Log File Name')
+            .setDesc('Enter the name of the log file (including extension)')
+            .addText((text: TextComponent) => {
+                text
+                    .setPlaceholder('Enter log file name')
+                    .setValue(this.plugin.settings.logFilePath)
+                    .onChange(async (value) => {
+                        this.plugin.settings.logFilePath = value.trim();
+                        await this.plugin.saveSettings();
+                    });
+            });
     }
 }
