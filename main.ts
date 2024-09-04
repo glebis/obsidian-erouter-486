@@ -80,7 +80,19 @@ export default class ERouter486Plugin extends Plugin {
         this.registerEvent(this.app.vault.on('modify', this.handleFileChange.bind(this)));
 
         this.startFileMonitoring();
+        this.logActiveRules();
         console.log('ERouter486Plugin: Plugin loaded and monitoring started');
+    }
+
+    logActiveRules() {
+        const activeRules = this.settings.monitoringRules.filter(rule => rule.enabled);
+        console.log(`Active monitoring rules: ${activeRules.length}`);
+        activeRules.forEach((rule, index) => {
+            console.log(`Rule ${index + 1}:`);
+            console.log(`  Folders: ${rule.folders.join(', ')}`);
+            console.log(`  File template: ${rule.fileNameTemplate}`);
+            console.log(`  Delay: ${rule.delay} seconds`);
+        });
     }
 
     onunload() {
