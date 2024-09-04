@@ -155,16 +155,31 @@ export default class ERouter486Plugin extends Plugin {
         await this.logOperation('process', file.path, rule);
     }
 
+    private lastRequestTime: number = 0;
+    private readonly REQUEST_INTERVAL = 15000; // 15 seconds in milliseconds
+
     async processWithLLM(content: string, prompt: string): Promise<string> {
         console.debug(`ERouter486Plugin: Processing content with LLM, prompt: ${prompt}`);
-        
+    
         const groq = new Groq({ apiKey: this.settings.apiKey, dangerouslyAllowBrowser: true });
-        
+    
         const maxRetries = 3;
         const delayBetweenRetries = 2000; // 2 seconds
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
+                // Implement rate limiting
+                const now = Date.now();
+                const timeSinceLastRequest = now - this.lastRequestTime;
+                if (timeSinceLastRequest < this.REQUEST_INTERVAL) {
+                    const waitTime = this.REQUEST_INTERVAL - timeSinceLastRequest;
+                    console.debug(`ERouter486Plugin: Rate limiting - Waiting ${waitTime}ms before making the next request`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                }
+
+                console.debug(`ERouter486Plugin: Making LLM request (attempt ${attempt}/${maxRetries})`);
+                this.lastRequestTime = Date.now();
+
                 const chatCompletion = await groq.chat.completions.create({
                     messages: [
                         { role: 'system', content: 'You are a helpful assistant.' },
@@ -173,23 +188,24 @@ export default class ERouter486Plugin extends Plugin {
                     model: this.settings.modelName,
                 });
 
+                console.debug(`ERouter486Plugin: LLM request successful`);
                 return chatCompletion.choices[0]?.message?.content || 'No response from LLM';
             } catch (error) {
-                console.error(`Error processing with LLM (attempt ${attempt}/${maxRetries}):`, error);
-                
+                console.error(`ERouter486Plugin: Error processing with LLM (attempt ${attempt}/${maxRetries}):`, error);
+            
                 if (attempt === maxRetries) {
                     return `Error processing content after ${maxRetries} attempts: ${error.message}`;
                 }
 
                 if (error.message.includes('429')) {
-                    console.log(`Rate limit reached. Waiting ${delayBetweenRetries}ms before retrying...`);
+                    console.debug(`ERouter486Plugin: Rate limit reached. Waiting ${delayBetweenRetries}ms before retrying...`);
                     await new Promise(resolve => setTimeout(resolve, delayBetweenRetries));
                 } else {
                     throw error; // If it's not a rate limit error, throw it immediately
                 }
             }
         }
-        
+    
         // This line ensures the function always returns a string
         return 'Unexpected error occurred while processing with LLM';
     }
