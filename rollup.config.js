@@ -26,6 +26,7 @@ export default defineConfig({
   ],
   onwarn(warning, warn) {
     if (warning.code === 'THIS_IS_UNDEFINED') return;
+    if (warning.code === 'CIRCULAR_DEPENDENCY' && warning.message.includes('groq-sdk')) return;
     warn(warning);
   },
 });
