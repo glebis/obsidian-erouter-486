@@ -11,6 +11,7 @@ export class FileProcessor {
     private lastRequestTime: number = 0;
     private readonly REQUEST_INTERVAL = 15000; // 15 seconds in milliseconds
     private lastProcessedTimes: Map<string, number> = new Map();
+    private fileChangeDebounce: Map<string, NodeJS.Timeout> = new Map();
 
     constructor(private app: any, private settings: ERouter486Settings) {}
 
@@ -67,15 +68,24 @@ export class FileProcessor {
                     rule.folders.some(folder => file.path.startsWith(folder)) &&
                     this.matchFileNameTemplate(file.name, rule.fileNameTemplate)) {
                     console.log(`ERouter486Plugin: Rule applied to file ${file.path}`);
-                    console.log(`ERouter486Plugin: Starting delay of ${rule.delay} seconds before processing`);
-                    setTimeout(async () => {
+                    
+                    // Clear any existing timeout for this file
+                    if (this.fileChangeDebounce.has(file.path)) {
+                        clearTimeout(this.fileChangeDebounce.get(file.path));
+                    }
+                    
+                    // Set a new timeout
+                    this.fileChangeDebounce.set(file.path, setTimeout(async () => {
+                        console.log(`ERouter486Plugin: Starting delay of ${rule.delay} seconds before processing`);
+                        await new Promise(resolve => setTimeout(resolve, rule.delay * 1000));
                         console.log(`ERouter486Plugin: Delay completed. Launching processing for file ${file.path}`);
                         if (await this.app.vault.adapter.exists(file.path)) {
                             await this.processFile(file, rule);
                         } else {
                             console.warn(`ERouter486Plugin: File ${file.path} no longer exists. Skipping processing.`);
                         }
-                    }, rule.delay * 1000);
+                        this.fileChangeDebounce.delete(file.path);
+                    }, 1000)); // 1 second debounce
                 }
             }
         } else if (file instanceof TFile) {
