@@ -17,6 +17,7 @@ interface ERouter486Settings {
     apiEndpoint: string;
     modelName: string;
     monitoringRules: MonitoringRule[];
+    logFilePath: string;
 }
 
 const DEFAULT_SETTINGS: ERouter486Settings = {
@@ -33,7 +34,8 @@ const DEFAULT_SETTINGS: ERouter486Settings = {
         templateFile: '',
         outputFileNameTemplate: '{{filename}}_processed',
         outputFileHandling: 'append'
-    }]
+    }],
+    logFilePath: 'erouter_log.md'
 }
 
 const LLM_PROVIDERS: Record<string, {
@@ -78,10 +80,12 @@ export default class ERouter486Plugin extends Plugin {
         this.registerEvent(this.app.vault.on('modify', this.handleFileChange.bind(this)));
 
         this.startFileMonitoring();
+        console.debug('ERouter486Plugin: Plugin loaded and monitoring started');
     }
 
     onunload() {
         this.stopFileMonitoring();
+        console.debug('ERouter486Plugin: Plugin unloaded and monitoring stopped');
     }
 
     private startFileMonitoring() {
@@ -90,6 +94,7 @@ export default class ERouter486Plugin extends Plugin {
                 rule.folders.forEach(folder => {
                     const watcher = setInterval(() => this.checkFolder(folder, rule), rule.delay * 1000);
                     this.fileWatchers.set(`${folder}-${rule.fileNameTemplate}`, watcher);
+                    console.debug(`ERouter486Plugin: Started monitoring folder ${folder} with template ${rule.fileNameTemplate}`);
                 });
             }
         });
@@ -98,6 +103,7 @@ export default class ERouter486Plugin extends Plugin {
     private stopFileMonitoring() {
         this.fileWatchers.forEach(watcher => clearInterval(watcher));
         this.fileWatchers.clear();
+        console.debug('ERouter486Plugin: Stopped all file monitoring');
     }
 
     private async checkFolder(folder: string, rule: MonitoringRule) {
@@ -129,13 +135,16 @@ export default class ERouter486Plugin extends Plugin {
     }
 
     private async processFile(file: TFile, rule: MonitoringRule) {
+        console.debug(`ERouter486Plugin: Processing file ${file.path} with rule ${JSON.stringify(rule)}`);
         const content = await this.app.vault.read(file);
         const processedContent = await this.processWithLLM(content, rule.prompt);
         await this.saveProcessedContent(file, processedContent, rule);
+        await this.logOperation('process', file.path, rule);
     }
 
     private async processWithLLM(content: string, prompt: string): Promise<string> {
         // TODO: Implement actual LLM processing
+        console.debug(`ERouter486Plugin: Processing content with LLM, prompt: ${prompt}`);
         return `Processed: ${content}\nWith prompt: ${prompt}`;
     }
 
@@ -147,10 +156,12 @@ export default class ERouter486Plugin extends Plugin {
             switch (rule.outputFileHandling) {
                 case 'overwrite':
                     await this.app.vault.modify(outputFile, content);
+                    console.debug(`ERouter486Plugin: Overwritten file ${outputFileName}`);
                     break;
                 case 'append':
                     const existingContent = await this.app.vault.read(outputFile);
                     await this.app.vault.modify(outputFile, existingContent + '\n' + content);
+                    console.debug(`ERouter486Plugin: Appended to file ${outputFileName}`);
                     break;
                 case 'rename':
                     let newName = outputFileName;
@@ -160,10 +171,12 @@ export default class ERouter486Plugin extends Plugin {
                         counter++;
                     }
                     await this.app.vault.create(newName, content);
+                    console.debug(`ERouter486Plugin: Created new file ${newName}`);
                     break;
             }
         } else {
             await this.app.vault.create(outputFileName, content);
+            console.debug(`ERouter486Plugin: Created new file ${outputFileName}`);
         }
     }
 
@@ -182,6 +195,22 @@ export default class ERouter486Plugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+
+    private async logOperation(operation: string, filePath: string, rule: MonitoringRule) {
+        const logEntry = `[${new Date().toISOString()}] ${operation}: ${filePath} (Rule: ${JSON.stringify(rule)})\n`;
+        console.debug(`ERouter486Plugin: ${logEntry.trim()}`);
+        await this.appendToLogFile(logEntry);
+    }
+
+    private async appendToLogFile(content: string) {
+        const logFile = this.app.vault.getAbstractFileByPath(this.settings.logFilePath);
+        if (logFile instanceof TFile) {
+            const existingContent = await this.app.vault.read(logFile);
+            await this.app.vault.modify(logFile, existingContent + content);
+        } else {
+            await this.app.vault.create(this.settings.logFilePath, content);
+        }
     }
 
     async testLLMConnection(): Promise<{ success: boolean; message: string }> {
@@ -226,6 +255,7 @@ class ERouter486SettingTab extends PluginSettingTab {
 
         this.addLLMSettings(containerEl);
         this.addMonitoringRulesSettings(containerEl);
+        this.addLogSettings(containerEl);
     }
 
     addLLMSettings(containerEl: HTMLElement): void {
@@ -480,3 +510,17 @@ class ERouter486SettingTab extends PluginSettingTab {
         }
     }
 }
+    addLogSettings(containerEl: HTMLElement): void {
+        new Setting(containerEl)
+            .setName('Log File Path')
+            .setDesc('Enter the path for the log file')
+            .addText((text: TextComponent) => {
+                text
+                    .setPlaceholder('Enter log file path')
+                    .setValue(this.plugin.settings.logFilePath)
+                    .onChange(async (value) => {
+                        this.plugin.settings.logFilePath = value;
+                        await this.plugin.saveSettings();
+                    });
+            });
+    }
