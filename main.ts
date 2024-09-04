@@ -255,7 +255,8 @@ class ERouter486SettingTab extends PluginSettingTab {
 
         this.addLLMSettings(containerEl);
         this.addMonitoringRulesSettings(containerEl);
-        this.addLogSettings(containerEl);
+        // TODO: Implement log settings if needed
+        // this.addLogSettings(containerEl);
     }
 
     addLLMSettings(containerEl: HTMLElement): void {
