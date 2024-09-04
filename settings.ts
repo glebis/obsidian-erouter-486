@@ -308,7 +308,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
           .onClick(async () => {
             new FileSuggestModal(this.app, (file: TFile) => {
               rule.templateFile = file.path;
-              const textComponent = button.parentElement?.previousElementSibling?.querySelector('input') as HTMLInputElement | null;
+              const textComponent = (button.buttonEl.parentElement?.previousElementSibling?.querySelector('input') as HTMLInputElement) || null;
               if (textComponent) {
                 textComponent.value = file.path;
                 textComponent.dispatchEvent(new Event('input'));
@@ -320,7 +320,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
 
     new Setting(ruleContent)
       .setName("Output File Name")
-      .setDesc("Enter the template for the output file name")
+      .setDesc("Enter the template for the output file name. Available variables: {{filename}}, {{date}}, {{time}}, {{extension}}, {{yyyy}}, {{MM}}, {{dd}}, {{HH}}, {{mm}}, {{ss}}")
       .addText((text: TextComponent) => {
         text
           .setPlaceholder("{{filename}}_processed")
@@ -330,26 +330,6 @@ export class ERouter486SettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
       });
-
-    new Setting(ruleContent)
-      .setName("Output File Name")
-      .setDesc("Enter the name for the output file")
-      .addText((text: TextComponent) => {
-        text
-          .setPlaceholder("Enter output file name")
-          .setValue(rule.outputFileName || "")
-          .onChange(async (value) => {
-            rule.outputFileName = value;
-            await this.plugin.saveSettings();
-          });
-      });
-
-    new Setting(ruleContent)
-      .setName("Output File Name Variables")
-      .setDesc(
-        "Available variables: {{filename}}, {{date}}, {{time}}, {{extension}}, {{yyyy}}, {{MM}}, {{dd}}, {{HH}}, {{mm}}, {{ss}}",
-      )
-      .setClass("setting-item-description")
 
     new Setting(ruleContent)
       .setName("Output File Handling")
