@@ -1,6 +1,6 @@
 import { App, Plugin, TAbstractFile, TFile, PluginManifest } from 'obsidian';
 import { Groq } from 'groq-sdk';
-import { ERouter486Settings, DEFAULT_SETTINGS, LLM_PROVIDERS } from './types';
+import { ERouter486Settings, DEFAULT_SETTINGS, LLM_PROVIDERS, MonitoringRule } from './types';
 import { ERouter486SettingTab } from './settings';
 import { FileProcessor } from './fileProcessor';
 
