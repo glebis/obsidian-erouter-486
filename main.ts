@@ -330,7 +330,7 @@ class ERouter486SettingTab extends PluginSettingTab {
             providerInfo.defaultModels.forEach((model: string) => {
                 dropdown.addOption(model, model);
             });
-            dropdown.setValue(providerInfo.defaultModels[0]);
+            dropdown.setValue('llama-3.1-8b-instant');
         }
     }
 }
