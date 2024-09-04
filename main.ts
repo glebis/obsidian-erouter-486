@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ButtonComponent, TextAreaComponent, DropdownComponent, TextComponent, ToggleComponent, TAbstractFile, TFile, Vault } from 'obsidian';
-import { Groq } from '@groq/groq';
+import { Groq } from 'groq-sdk';
 
 export interface MonitoringRule {
     enabled: boolean;
@@ -158,7 +158,7 @@ export default class ERouter486Plugin extends Plugin {
     async processWithLLM(content: string, prompt: string): Promise<string> {
         console.debug(`ERouter486Plugin: Processing content with LLM, prompt: ${prompt}`);
         
-        const groq = new Groq(this.settings.apiKey);
+        const groq = new Groq({ apiKey: this.settings.apiKey });
         
         try {
             const chatCompletion = await groq.chat.completions.create({
@@ -247,7 +247,7 @@ export default class ERouter486Plugin extends Plugin {
         }
 
         try {
-            const groq = new Groq(this.settings.apiKey);
+            const groq = new Groq({ apiKey: this.settings.apiKey });
             const chatCompletion = await groq.chat.completions.create({
                 messages: [{ role: 'user', content: 'Hello, this is a test message.' }],
                 model: this.settings.modelName,
