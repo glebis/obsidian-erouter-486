@@ -42,13 +42,18 @@ export class FileProcessor {
         );
 
         for (const file of files) {
-            const stat = await this.app.vault.adapter.stat(file.path);
-            const lastModified = stat.mtime;
-            const lastProcessed = this.lastProcessedTimes.get(file.path) || 0;
+            if (await this.app.vault.adapter.exists(file.path)) {
+                const stat = await this.app.vault.adapter.stat(file.path);
+                const lastModified = stat.mtime;
+                const lastProcessed = this.lastProcessedTimes.get(file.path) || 0;
 
-            if (lastModified > lastProcessed) {
-                await this.processFile(file, rule);
-                this.lastProcessedTimes.set(file.path, Date.now());
+                if (lastModified > lastProcessed) {
+                    await this.processFile(file, rule);
+                    this.lastProcessedTimes.set(file.path, Date.now());
+                }
+            } else {
+                console.debug(`ERouter486Plugin: File ${file.path} no longer exists. Removing from lastProcessedTimes.`);
+                this.lastProcessedTimes.delete(file.path);
             }
         }
     }
