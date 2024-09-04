@@ -110,10 +110,24 @@ export class FileProcessor {
                     if (templater) {
                         console.debug(`ERouter486Plugin: Templater plugin found, applying template`);
                         const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
-                        await templater.templater.append_template_to_active_file(templateFile, outputFile);
-                        console.debug(`ERouter486Plugin: Template successfully applied to output file using Templater`);
+                        try {
+                            await templater.templater.append_template_to_active_file(templateFile, outputFile);
+                            console.debug(`ERouter486Plugin: Template successfully applied to output file using Templater`);
+                        } catch (error) {
+                            console.error(`ERouter486Plugin: Error applying template:`, error);
+                            // Fallback to manual template application if Templater fails
+                            console.debug(`ERouter486Plugin: Falling back to manual template application`);
+                            const processedContent = await this.app.vault.read(outputFile);
+                            const combinedContent = templateContent + '\n' + processedContent;
+                            await this.app.vault.modify(outputFile, combinedContent);
+                            console.debug(`ERouter486Plugin: Manual template application completed`);
+                        }
                     } else {
-                        console.warn('ERouter486Plugin: Templater plugin not found. Template not applied.');
+                        console.warn('ERouter486Plugin: Templater plugin not found. Applying template manually.');
+                        const processedContent = await this.app.vault.read(outputFile);
+                        const combinedContent = templateContent + '\n' + processedContent;
+                        await this.app.vault.modify(outputFile, combinedContent);
+                        console.debug(`ERouter486Plugin: Manual template application completed`);
                     }
                     console.debug(`ERouter486Plugin: Template application process completed`);
                 } else {
