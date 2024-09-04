@@ -12,18 +12,6 @@ export interface MonitoringRule {
     deleteSourceFile: boolean;
 }
 
-export interface MonitoringRule {
-    name: string;
-    enabled: boolean;
-    folders: string[];
-    delay: number;
-    fileNameTemplate: string;
-    prompt: string;
-    templateFile: string;
-    outputFileNameTemplate: string;
-    outputFileHandling: 'overwrite' | 'append' | 'rename';
-}
-
 export interface ERouter486Settings {
     llmProvider: string;
     apiKey: string;
