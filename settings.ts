@@ -329,7 +329,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
     new Setting(ruleContent)
       .setName("Output File Name Variables")
       .setDesc(
-        "Available variables: {{filename}}, {{date}}, {{time}}, {{extension}}",
+        "Available variables: {{filename}}, {{date}}, {{time}}, {{extension}}, {{yyyy}}, {{MM}}, {{dd}}, {{HH}}, {{mm}}, {{ss}}",
       )
       .setClass("setting-item-description")
 
