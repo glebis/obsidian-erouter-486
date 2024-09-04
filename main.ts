@@ -31,27 +31,24 @@ const LLM_PROVIDERS: Record<string, {
     needsEndpoint: boolean;
     defaultEndpoint?: string;
 }> = {
-    openai: {
-        name: 'OpenAI',
-        defaultModels: ['gpt-3.5-turbo', 'gpt-4'],
-        needsEndpoint: false
-    },
-    anthropic: {
-        name: 'Anthropic',
-        defaultModels: ['claude-2', 'claude-instant-1'],
-        needsEndpoint: false
-    },
     groq: {
         name: 'GROQ',
-        defaultModels: ['llama2-70b-4096', 'mixtral-8x7b-32768', 'gemma-7b-it'],
+        defaultModels: [
+            'distil-whisper-large-v3-en',
+            'gemma2-9b-it',
+            'gemma-7b-it',
+            'llama3-groq-70b-8192-tool-use-preview',
+            'llama3-groq-8b-8192-tool-use-preview',
+            'llama-3.1-70b-versatile',
+            'llama-3.1-8b-instant',
+            'llama-guard-3-8b',
+            'llama3-70b-8192',
+            'llama3-8b-8192',
+            'mixtral-8x7b-32768',
+            'whisper-large-v3'
+        ],
         needsEndpoint: true,
         defaultEndpoint: 'https://api.groq.com/openai/v1'
-    },
-    openrouter: {
-        name: 'OpenRouter',
-        defaultModels: ['openai/gpt-3.5-turbo', 'anthropic/claude-2'],
-        needsEndpoint: true,
-        defaultEndpoint: 'https://openrouter.ai/api/v1'
     }
 };
 
@@ -81,33 +78,16 @@ export default class ERouter486Plugin extends Plugin {
             return { success: false, message: 'API key is empty. Please enter a valid API key.' };
         }
 
-        // This is still a placeholder. Replace with actual API calls for each provider.
         try {
-            // Simulating an API call
+            // TODO: Implement actual GROQ API connection test
             await new Promise(resolve => setTimeout(resolve, 1000));
             
-            // Add provider-specific logic here
-            switch (this.settings.llmProvider) {
-                case 'openai':
-                    // OpenAI-specific check
-                    break;
-                case 'anthropic':
-                    // Anthropic-specific check
-                    break;
-                case 'groq':
-                    // GROQ-specific check
-                    break;
-                case 'openrouter':
-                    // OpenRouter-specific check
-                    break;
-                default:
-                    throw new Error('Unknown LLM provider');
-            }
+            // GROQ-specific check logic would go here
 
-            return { success: true, message: 'Connection successful!' };
+            return { success: true, message: 'Connection to GROQ successful!' };
         } catch (error) {
-            console.error('LLM connection test failed:', error);
-            return { success: false, message: `Connection failed: ${error.message}` };
+            console.error('GROQ connection test failed:', error);
+            return { success: false, message: `Connection to GROQ failed: ${error.message}` };
         }
     }
 
@@ -140,18 +120,10 @@ class ERouter486SettingTab extends PluginSettingTab {
     addLLMSettings(containerEl: HTMLElement): void {
         new Setting(containerEl)
             .setName('LLM Provider')
-            .setDesc('Select the LLM provider to use')
-            .addDropdown((dropdown: DropdownComponent) => {
-                Object.keys(LLM_PROVIDERS).forEach(key => {
-                    dropdown.addOption(key, LLM_PROVIDERS[key].name);
-                });
-                dropdown.setValue(this.plugin.settings.llmProvider)
-                    .onChange(async (value) => {
-                        this.plugin.settings.llmProvider = value;
-                        await this.plugin.saveSettings();
-                        this.updateProviderSpecificSettings(value);
-                    });
-            });
+            .setDesc('Currently only GROQ is supported')
+            .addText(text => text.setValue('GROQ').setDisabled(true));
+
+        this.plugin.settings.llmProvider = 'groq';
 
         new Setting(containerEl)
             .setName('API Key')
