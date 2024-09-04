@@ -1,11 +1,11 @@
 {
-	"id": "obsidian-erouter-486",
-	"name": "Obsidian eRouter 486",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Gleb Kalinin",
-	"authorUrl": "https://glebkalinin.com",
-	"fundingUrl": "https://glebkalinin.com",
-	"isDesktopOnly": false
+  "id": "obsidian-erouter-486",
+  "name": "Obsidian eRouter 486",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Monitors folders and creates new files using templates.",
+  "author": "Gleb Kalinin",
+  "authorUrl": "https://glebkalinin.com",
+  "fundingUrl": "https://glebkalinin.com",
+  "isDesktopOnly": false
 }
