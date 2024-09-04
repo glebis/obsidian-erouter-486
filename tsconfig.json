@@ -18,10 +18,13 @@
       "ES6",
       "ES7"
     ],
-    "types": ["node", "handlebars"],
+    "types": ["node", "handlebars", "jest"],
     "strict": true
   },
   "include": [
     "**/*.ts"
+  ],
+  "exclude": [
+    "tests/**/*.ts"
   ]
 }

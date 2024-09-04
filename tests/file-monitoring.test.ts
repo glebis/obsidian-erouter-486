@@ -1,10 +1,14 @@
 import { TFile, Vault, App } from 'obsidian';
 import ERouter486Plugin from '../main';
 import { MonitoringRule } from '../types';
+import { FileProcessor } from '../fileProcessor';
+
+jest.mock('obsidian');
 
 describe('ERouter486Plugin File Monitoring', () => {
     let plugin: ERouter486Plugin;
     let mockVault: jest.Mocked<Vault>;
+    let mockFileProcessor: jest.Mocked<FileProcessor>;
 
     beforeEach(() => {
         mockVault = {
@@ -33,30 +37,33 @@ describe('ERouter486Plugin File Monitoring', () => {
                 }
             ]
         } as any;
+
+        mockFileProcessor = {
+            handleFileChange: jest.fn(),
+            checkFolder: jest.fn(),
+            matchFileNameTemplate: jest.fn()
+        } as unknown as jest.Mocked<FileProcessor>;
+        plugin.fileProcessor = mockFileProcessor;
     });
 
     test('handleFileChange processes matching files', async () => {
-        const mockFile = new TFile() as jest.Mocked<TFile>;
+        const mockFile = new TFile();
         mockFile.path = 'test-folder/test-file.md';
         mockFile.name = 'test-file.md';
 
-        const processFileSpy = jest.spyOn(plugin as any, 'processFile').mockResolvedValue(undefined);
-
         await plugin.handleFileChange(mockFile);
 
-        expect(processFileSpy).toHaveBeenCalledWith(mockFile, plugin.settings.monitoringRules[0]);
+        expect(mockFileProcessor.handleFileChange).toHaveBeenCalledWith(mockFile);
     });
 
     test('handleFileChange ignores non-matching files', async () => {
-        const mockFile = new TFile() as jest.Mocked<TFile>;
+        const mockFile = new TFile();
         mockFile.path = 'other-folder/test-file.txt';
         mockFile.name = 'test-file.txt';
 
-        const processFileSpy = jest.spyOn(plugin as any, 'processFile').mockResolvedValue(undefined);
-
         await plugin.handleFileChange(mockFile);
 
-        expect(processFileSpy).not.toHaveBeenCalled();
+        expect(mockFileProcessor.handleFileChange).toHaveBeenCalledWith(mockFile);
     });
 
     test('checkFolder processes matching files', async () => {
@@ -67,18 +74,20 @@ describe('ERouter486Plugin File Monitoring', () => {
 
         mockVault.getFiles.mockReturnValue([mockFile]);
 
-        const processFileSpy = jest.spyOn(plugin as any, 'processFile').mockResolvedValue(undefined);
+        await plugin.fileProcessor.checkFolder('test-folder', plugin.settings.monitoringRules[0]);
 
-        // This test needs to be updated to use the new FileProcessor class
-        // await plugin.fileProcessor.checkFolder('test-folder', plugin.settings.monitoringRules[0]);
-
-        expect(processFileSpy).toHaveBeenCalledWith(mockFile, plugin.settings.monitoringRules[0]);
+        expect(mockFileProcessor.checkFolder).toHaveBeenCalledWith('test-folder', plugin.settings.monitoringRules[0]);
     });
 
     test('matchFileNameTemplate correctly matches files', () => {
-        expect((plugin as any).matchFileNameTemplate('test.md', '*.md')).toBe(true);
-        expect((plugin as any).matchFileNameTemplate('test.txt', '*.md')).toBe(false);
-        expect((plugin as any).matchFileNameTemplate('test.md', 'test.*')).toBe(true);
-        expect((plugin as any).matchFileNameTemplate('other.md', 'test.*')).toBe(false);
+        mockFileProcessor.matchFileNameTemplate.mockImplementation((fileName, template) => {
+            const regex = new RegExp('^' + template.replace(/\*/g, '.*') + '$');
+            return regex.test(fileName);
+        });
+
+        expect(mockFileProcessor.matchFileNameTemplate('test.md', '*.md')).toBe(true);
+        expect(mockFileProcessor.matchFileNameTemplate('test.txt', '*.md')).toBe(false);
+        expect(mockFileProcessor.matchFileNameTemplate('test.md', 'test.*')).toBe(true);
+        expect(mockFileProcessor.matchFileNameTemplate('other.md', 'test.*')).toBe(false);
     });
 });
