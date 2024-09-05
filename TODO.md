@@ -30,7 +30,7 @@ The plugin aims to streamline workflows by automatically enhancing, categorizing
    - [x] Develop a system for defining and storing prompt patterns
    - [x] Implement regex-based matching for file content, names, and locations
    - [x] Create logic to select appropriate prompts based on matched patterns
-   - [ ] Add support for filtering based on file contents using regular expressions
+   - [x] Add support for filtering based on file contents using regular expressions
 
 Examples of regular expressions for content filtering:
 1. Multiple forms of a certain word: \b(run|running|ran)\b
