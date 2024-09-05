@@ -1,6 +1,6 @@
 {
   "id": "obsidian-erouter-486",
-  "name": "Obsidian eRouter 486",
+  "name": "eRouter 486",
   "version": "1.0.0",
   "minAppVersion": "0.15.0",
   "description": "Monitors folders and applies configurable AI-powered prompts to new or modified files using various LLM providers.",
