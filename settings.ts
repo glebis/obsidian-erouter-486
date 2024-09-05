@@ -286,6 +286,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
           .addOption("\\b\\w+\\b", "Containing a word")
           .addOption("\\d+", "Containing numbers")
           .addOption("\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b", "Email address")
+          .addOption("\\b(color|colour)\\b", "Multiple word versions (e.g., color/colour)")
           .onChange((value: string) => {
             if (value) {
               const textComponent = dropdown.settingEl.querySelector('input') as HTMLInputElement;
