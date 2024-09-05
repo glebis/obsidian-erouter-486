@@ -42,7 +42,7 @@ export class FileProcessor {
             return;
         }
 
-        if (rule.contentRegex) {
+        if (rule.contentRegex && rule.contentRegex.trim() !== '') {
             const content = await this.app.vault.read(file);
             const regex = new RegExp(rule.contentRegex);
             if (!regex.test(content)) {
@@ -86,14 +86,7 @@ export class FileProcessor {
         
         for (const file of files) {
             if (this.matchesFileNameTemplate(file.name, rule.fileNameTemplate)) {
-                if (rule.contentRegex) {
-                    const matchesContent = await ContentFilter.matchesContent(file, new RegExp(rule.contentRegex));
-                    if (matchesContent) {
-                        await this.processFile(file, rule);
-                    }
-                } else {
-                    await this.processFile(file, rule);
-                }
+                await this.processFile(file, rule);
             }
         }
     }
