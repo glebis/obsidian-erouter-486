@@ -37,6 +37,11 @@ Examples of regular expressions for content filtering:
 2. Starting with a certain phrase: ^(# Task:|TODO:)
 3. Ending with a specific phrase: (Conclusion:|End of document\.)$
 
+These examples demonstrate:
+1. Matching multiple forms of the word "run"
+2. Matching files that start with either "# Task:" or "TODO:"
+3. Matching files that end with either "Conclusion:" or "End of document."
+
 4. LLM Integration
    - [x] Implement API connections for GROQ, OpenRouter, OpenAI, and Anthropic
    - [x] Create a flexible system for adding custom LLM providers
