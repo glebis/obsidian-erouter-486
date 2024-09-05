@@ -19,7 +19,7 @@ The plugin aims to streamline workflows by automatically enhancing, categorizing
    - [x] Create basic plugin structure
    - [x] Implement settings page for folder selection
    - [x] Add configuration options for LLM providers (API keys, endpoints)
-   - [ ] Create UI for managing prompts and their associated patterns
+   - [x] Create UI for managing prompts and their associated patterns
 
 2. Folder Monitoring
    - [x] Implement file system watcher for selected folders
