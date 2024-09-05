@@ -44,6 +44,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
   plugin: ERouter486Plugin;
   private apiEndpointSetting: Setting;
   private modelNameSetting: Setting;
+  private contentRegexSetting: Setting;
 
   constructor(app: App, plugin: ERouter486Plugin) {
     super(app, plugin);
@@ -264,7 +265,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
           });
       })
 
-    new Setting(ruleContent)
+    this.contentRegexSetting = new Setting(ruleContent)
       .setName("Content Regex")
       .setDesc("Enter a regex pattern to match file contents (optional)")
       .addText((text: TextComponent) => {
@@ -286,11 +287,11 @@ export class ERouter486SettingTab extends PluginSettingTab {
           .addOption("\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b", "Email address")
           .onChange((value: string) => {
             if (value) {
-              const textComponent = text.inputEl;
-              const currentValue = textComponent.value;
-              const cursorPosition = textComponent.selectionStart || 0;
+              const textComponent = this.contentRegexSetting.components[0] as TextComponent;
+              const currentValue = textComponent.getValue();
+              const cursorPosition = textComponent.inputEl.selectionStart || 0;
               const newValue = currentValue.slice(0, cursorPosition) + value + currentValue.slice(cursorPosition);
-              text.setValue(newValue);
+              textComponent.setValue(newValue);
               rule.contentRegex = newValue;
               this.plugin.saveSettings();
               dropdown.setValue("");
