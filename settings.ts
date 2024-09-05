@@ -65,6 +65,9 @@ export class ERouter486SettingTab extends PluginSettingTab {
 
     containerEl.createEl("h2", { text: "eRouter 486 Settings" });
 
+    const descriptionEl = containerEl.createEl("p", { cls: "setting-item-description" });
+    descriptionEl.setText("eRouter 486 automates content processing in Obsidian using AI. It monitors folders, processes files with LLMs (OpenAI, Anthropic, GROQ), and saves results based on custom rules. Ideal for summarizing, translating, or structuring notes automatically.");
+
     this.addLLMSettings(containerEl);
     this.addMonitoringRulesSettings(containerEl);
     this.addLogSettings(containerEl);
