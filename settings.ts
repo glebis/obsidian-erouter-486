@@ -63,7 +63,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
 
     const logoEl = containerEl.createEl("img", {
       attr: {
-        src: "app://local/your_vault_path/.obsidian/plugins/obsidian-erouter-486/src/assets/erouter_logo.webp",
+        src: "src/assets/erouter_logo.webp",
         alt: "eRouter 486 Logo",
         style: "width: 100%; max-width: 300px; display: block; margin: 0 auto 20px;"
       }
