@@ -264,6 +264,19 @@ export class ERouter486SettingTab extends PluginSettingTab {
       })
 
     new Setting(ruleContent)
+      .setName("Content Regex")
+      .setDesc("Enter a regex pattern to match file contents (optional)")
+      .addText((text: TextComponent) => {
+        text
+          .setPlaceholder("Enter content regex")
+          .setValue(rule.contentRegex || "")
+          .onChange(async (value) => {
+            rule.contentRegex = value;
+            await this.plugin.saveSettings();
+          });
+      })
+
+    new Setting(ruleContent)
       .setName("Prompt")
       .setDesc("Enter the prompt to be applied. Press Ctrl+[ to insert a file link.")
       .addTextArea((text: TextAreaComponent) => {

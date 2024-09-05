@@ -10,6 +10,7 @@ export interface MonitoringRule {
     outputFileName: string;
     outputFileHandling: 'overwrite' | 'append' | 'rename';
     deleteSourceFile: boolean;
+    contentRegex: string;
 }
 
 export interface ERouter486Settings {
