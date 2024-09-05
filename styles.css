@@ -57,7 +57,7 @@ If your plugin does not need CSS, delete this file.
     text-decoration: line-through;
 }
 .erouter-logo-container {
-  background-image: url('src/assets/erouter_logo.webp');
+  background-image: url('data:image/webp;base64,YOUR_BASE64_ENCODED_IMAGE_HERE');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
