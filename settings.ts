@@ -266,7 +266,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
           });
       })
 
-    this.contentRegexSetting = new Setting(ruleContent)
+    new Setting(ruleContent)
       .setName("Content Regex")
       .setDesc("Enter a regex pattern to match file contents (optional)")
       .addText((text: TextComponent) => {
@@ -288,14 +288,15 @@ export class ERouter486SettingTab extends PluginSettingTab {
           .addOption("\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b", "Email address")
           .onChange((value: string) => {
             if (value) {
-              const textComponent = this.contentRegexSetting.components[0] as TextComponent;
-              textComponent.setValue(value);
+              const textComponent = dropdown.settingEl.querySelector('input') as HTMLInputElement;
+              textComponent.value = value;
+              textComponent.dispatchEvent(new Event('input'));
               rule.contentRegex = value;
               this.plugin.saveSettings();
               dropdown.setValue("");
             }
           });
-      })
+      });
 
     new Setting(ruleContent)
       .setName("Prompt")
