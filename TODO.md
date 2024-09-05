@@ -22,24 +22,24 @@ The plugin aims to streamline workflows by automatically enhancing, categorizing
    - [ ] Create UI for managing prompts and their associated patterns
 
 2. Folder Monitoring
-   - [ ] Implement file system watcher for selected folders
-   - [ ] Create logic to detect new and modified files
-   - [ ] Implement configurable delay before processing files
+   - [x] Implement file system watcher for selected folders
+   - [x] Create logic to detect new and modified files
+   - [x] Implement configurable delay before processing files
 
 3. Pattern Matching and Prompt Selection
-   - [ ] Develop a system for defining and storing prompt patterns
-   - [ ] Implement regex-based matching for file content, names, and locations
-   - [ ] Create logic to select appropriate prompts based on matched patterns
+   - [x] Develop a system for defining and storing prompt patterns
+   - [x] Implement regex-based matching for file content, names, and locations
+   - [x] Create logic to select appropriate prompts based on matched patterns
 
 4. LLM Integration
-   - [ ] Implement API connections for GROQ, OpenRouter, OpenAI, and Anthropic
-   - [ ] Create a flexible system for adding custom LLM providers
+   - [x] Implement API connections for GROQ, OpenRouter, OpenAI, and Anthropic
+   - [x] Create a flexible system for adding custom LLM providers
    - [ ] Develop error handling and retry logic for API calls
 
 5. File Processing
-   - [ ] Create a queue system for processing files
-   - [ ] Implement logic to apply selected prompts to file content
-   - [ ] Develop a method to update files with LLM-generated content
+   - [x] Create a queue system for processing files
+   - [x] Implement logic to apply selected prompts to file content
+   - [x] Develop a method to update files with LLM-generated content
 
 6. User Interface
    - [ ] Design and implement a status indicator for active monitoring
@@ -60,7 +60,7 @@ The plugin aims to streamline workflows by automatically enhancing, categorizing
    - [ ] Create developer documentation for future maintenance and contributions
 
 10. Security and Privacy
-    - [ ] Implement secure storage for API keys and sensitive configurations
+    - [x] Implement secure storage for API keys and sensitive configurations
     - [ ] Add options for local LLM processing to ensure privacy
 
 11. Extensibility
