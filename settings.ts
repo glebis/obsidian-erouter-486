@@ -51,6 +51,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
     this.plugin = plugin;
     this.apiEndpointSetting = new Setting(this.containerEl);
     this.modelNameSetting = new Setting(this.containerEl);
+    this.contentRegexSetting = new Setting(this.containerEl);
 
     // CSS styles have been moved to styles.css
   }
