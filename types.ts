@@ -38,7 +38,8 @@ export const DEFAULT_SETTINGS: ERouter486Settings = {
         outputFileNameTemplate: '{{filename}}_processed',
         outputFileName: '',
         outputFileHandling: 'append',
-        deleteSourceFile: false
+        deleteSourceFile: false,
+        contentRegex: ''
     }],
     logFilePath: 'erouter_log.md'
 }

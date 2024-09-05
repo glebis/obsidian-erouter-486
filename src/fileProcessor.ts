@@ -1,5 +1,5 @@
 import { App, TFile, TAbstractFile } from 'obsidian';
-import { ERouter486Settings, MonitoringRule, QueueItem } from './types';
+import { ERouter486Settings, MonitoringRule, QueueItem } from '../types';
 import { ContentFilter } from './content_filter';
 
 export class FileProcessor {
@@ -17,9 +17,9 @@ export class FileProcessor {
     async handleFileChange(file: TAbstractFile): Promise<void> {
         if (!(file instanceof TFile)) return;
 
-        const applicableRules = this.settings.monitoringRules.filter(rule => 
+        const applicableRules = this.settings.monitoringRules.filter((rule: MonitoringRule) => 
             rule.enabled && 
-            rule.folders.some(folder => file.path.startsWith(folder))
+            rule.folders.some((folder: string) => file.path.startsWith(folder))
         );
 
         for (const rule of applicableRules) {
@@ -61,9 +61,9 @@ export class FileProcessor {
     }
 
     startFileMonitoring(): void {
-        this.settings.monitoringRules.forEach(rule => {
+        this.settings.monitoringRules.forEach((rule: MonitoringRule) => {
             if (rule.enabled) {
-                rule.folders.forEach(folder => {
+                rule.folders.forEach((folder: string) => {
                     this.monitorFolder(folder, rule);
                 });
             }
