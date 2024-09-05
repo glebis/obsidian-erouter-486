@@ -276,6 +276,27 @@ export class ERouter486SettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
       })
+      .addDropdown((dropdown: DropdownComponent) => {
+        dropdown
+          .addOption("", "Select common regex")
+          .addOption("^[A-Za-z]", "Starting with a letter")
+          .addOption("[A-Za-z]$", "Ending with a letter")
+          .addOption("\\b\\w+\\b", "Containing a word")
+          .addOption("\\d+", "Containing numbers")
+          .addOption("\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b", "Email address")
+          .onChange((value: string) => {
+            if (value) {
+              const textComponent = text.inputEl;
+              const currentValue = textComponent.value;
+              const cursorPosition = textComponent.selectionStart || 0;
+              const newValue = currentValue.slice(0, cursorPosition) + value + currentValue.slice(cursorPosition);
+              text.setValue(newValue);
+              rule.contentRegex = newValue;
+              this.plugin.saveSettings();
+              dropdown.setValue("");
+            }
+          });
+      })
 
     new Setting(ruleContent)
       .setName("Prompt")
