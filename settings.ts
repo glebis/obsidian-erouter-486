@@ -289,11 +289,8 @@ export class ERouter486SettingTab extends PluginSettingTab {
           .onChange((value: string) => {
             if (value) {
               const textComponent = this.contentRegexSetting.components[0] as TextComponent;
-              const currentValue = textComponent.getValue();
-              const cursorPosition = textComponent.inputEl.selectionStart || 0;
-              const newValue = currentValue.slice(0, cursorPosition) + value + currentValue.slice(cursorPosition);
-              textComponent.setValue(newValue);
-              rule.contentRegex = newValue;
+              textComponent.setValue(value);
+              rule.contentRegex = value;
               this.plugin.saveSettings();
               dropdown.setValue("");
             }
