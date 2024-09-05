@@ -61,13 +61,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    const logoEl = containerEl.createEl("img", {
-      attr: {
-        src: "src/assets/erouter_logo.webp",
-        alt: "eRouter 486 Logo",
-        style: "width: 100%; max-width: 300px; display: block; margin: 0 auto 20px;"
-      }
-    });
+    const logoContainer = containerEl.createDiv({ cls: "erouter-logo-container" });
 
     containerEl.createEl("h2", { text: "eRouter 486 Settings" });
 
