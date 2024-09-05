@@ -289,11 +289,13 @@ export class ERouter486SettingTab extends PluginSettingTab {
           .addOption("\\b(color|colour)\\b", "Multiple word versions (e.g., color/colour)")
           .onChange((value: string) => {
             if (value) {
-              const textComponent = dropdown.settingEl.querySelector('input') as HTMLInputElement;
-              textComponent.value = value;
-              textComponent.dispatchEvent(new Event('input'));
-              rule.contentRegex = value;
-              this.plugin.saveSettings();
+              const textComponent = dropdown.selectEl.parentElement?.querySelector('input') as HTMLInputElement;
+              if (textComponent) {
+                textComponent.value = value;
+                textComponent.dispatchEvent(new Event('input'));
+                rule.contentRegex = value;
+                this.plugin.saveSettings();
+              }
               dropdown.setValue("");
             }
           });
