@@ -14,6 +14,8 @@ export class FileProcessor {
 
     constructor(private app: App, private settings: ERouter486Settings) {}
 
+    private debouncedHandleFileChange = debounce(this.processFileChange, 1000, true);
+
     async handleFileChange(file: TAbstractFile): Promise<void> {
         if (!(file instanceof TFile)) return;
 
