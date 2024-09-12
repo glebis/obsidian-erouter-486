@@ -10,15 +10,6 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "moduleFileExtensions": ["ts", "js"],
-    "testMatch": ["**/__tests__/**/*.test.ts", "**/?(*.)+(spec|test).ts"],
-    "transform": {
-      "^.+\\.ts$": "ts-jest"
-    }
-  },
   "keywords": [],
   "author": "Gleb Kalinin",
   "license": "MIT",
