@@ -24,3 +24,4 @@ data.json
 
 .zed
 .editorconfig
+esbuild.config.mjs
