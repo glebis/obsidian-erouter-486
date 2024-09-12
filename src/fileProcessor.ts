@@ -72,7 +72,7 @@ export class FileProcessor {
       const regex = new RegExp(rule.contentRegex);
       if (!regex.test(content)) {
         console.log(
-          `File ${file.path} content does not match regex ${rule.contentRegex}`,
+          `eRouter486: File ${file.path} content does not match regex ${rule.contentRegex}`,
         );
         return;
       }
@@ -95,6 +95,11 @@ export class FileProcessor {
         console.debug(`eRouter486: Sending content to LLM for processing`);
         const processedContent = await this.queueLLMRequest(content, prompt);
         console.debug(`eRouter486: Received processed content from LLM, length: ${processedContent.length}`);
+        
+        if (content === processedContent) {
+          console.debug(`eRouter486: LLM did not make any changes to the content`);
+          return;
+        }
         
         console.debug(`eRouter486: Now attempting to save processed content`);
         const outputFileName = await this.saveProcessedContent(file, processedContent, rule);
@@ -222,6 +227,7 @@ export class FileProcessor {
   }
 
   async queueLLMRequest(content: string, prompt: string): Promise<string> {
+    console.debug(`eRouter486: Queueing LLM request. Content length: ${content.length}, Prompt: ${prompt}`);
     return new Promise((resolve, reject) => {
       this.requestQueue.push({ content, prompt, resolve, reject });
       this.processQueue();
@@ -285,7 +291,9 @@ export class FileProcessor {
         });
 
         console.debug(`eRouter486: LLM request successful`);
-        return chatCompletion.choices[0]?.message?.content || 'No response from LLM';
+        const response = chatCompletion.choices[0]?.message?.content || 'No response from LLM';
+        console.debug(`eRouter486: LLM response length: ${response.length}`);
+        return response;
       } catch (error) {
         console.error(`eRouter486: Error processing with LLM (attempt ${attempt}/${maxRetries}):`, error);
       
