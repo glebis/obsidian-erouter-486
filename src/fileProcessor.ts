@@ -109,7 +109,7 @@ export class FileProcessor {
             
             console.debug(`eRouter486: Starting template application process`);
             // Process the template with Templater
-            const templater = this.app.plugins.plugins['templater-obsidian'];
+            const templater = (this.app as any).plugins?.plugins?.['templater-obsidian'];
             if (templater) {
               console.debug(`eRouter486: Templater plugin found, applying template`);
               const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
@@ -122,7 +122,7 @@ export class FileProcessor {
                 await this.manualTemplateApplication(outputFile, templateContent, processedContent);
               }
             } else {
-              console.warn('eRouter486: Templater plugin not found. Applying template manually.');
+              console.warn('eRouter486: Templater plugin not found or not accessible. Applying template manually.');
               const outputFile = this.app.vault.getAbstractFileByPath(outputFileName) as TFile;
               if (outputFile instanceof TFile) {
                 await this.manualTemplateApplication(outputFile, templateContent, processedContent);
