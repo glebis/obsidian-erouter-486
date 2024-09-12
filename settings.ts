@@ -1,6 +1,5 @@
+import { App, Plugin, PluginSettingTab } from "obsidian";
 import {
-  App,
-  PluginSettingTab,
   Setting,
   ButtonComponent,
   TextAreaComponent,
