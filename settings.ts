@@ -177,6 +177,7 @@ export class ERouter486SettingTab extends PluginSettingTab {
               outputFileHandling: "append",
               deleteSourceFile: false,
               contentRegex: "",
+              outputFolder: "processed", // Add this line
             });
             this.plugin.saveSettings();
             this.display();

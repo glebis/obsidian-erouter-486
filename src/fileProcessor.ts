@@ -14,7 +14,15 @@ export class FileProcessor {
 
     constructor(private app: App, private settings: ERouter486Settings) {}
 
-    private debouncedHandleFileChange = debounce(this.processFileChange, 1000, true);
+    private debouncedHandleFileChange = this.debounce(this.handleFileChange.bind(this), 1000);
+
+    private debounce(func: Function, wait: number) {
+        let timeout: NodeJS.Timeout;
+        return (...args: any[]) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func(...args), wait);
+        };
+    }
 
     async handleFileChange(file: TAbstractFile): Promise<void> {
         if (!(file instanceof TFile)) return;
