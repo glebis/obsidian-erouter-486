@@ -98,6 +98,8 @@ export class FileProcessor {
         
         console.debug(`eRouter486: Now attempting to save processed content`);
         const outputFileName = await this.saveProcessedContent(file, processedContent, rule);
+        console.debug(`eRouter486: saveProcessedContent returned: ${outputFileName}`);
+        
         if (outputFileName) {
           console.debug(`eRouter486: Content saved successfully to ${outputFileName}`);
           
@@ -158,6 +160,8 @@ export class FileProcessor {
       } else {
         console.warn(`eRouter486: File ${file.path} does not exist. Skipping processing.`);
       }
+    } catch (error) {
+      console.error(`eRouter486: Error in processFile:`, error);
     } finally {
       this.processingFiles.delete(file.path);
     }
@@ -334,8 +338,10 @@ export class FileProcessor {
 
     try {
       const outputFile = this.app.vault.getAbstractFileByPath(outputFileName);
+      console.debug(`eRouter486: Output file exists: ${outputFile instanceof TFile}`);
 
       if (outputFile instanceof TFile) {
+        console.debug(`eRouter486: Output file handling: ${rule.outputFileHandling}`);
         switch (rule.outputFileHandling) {
           case 'overwrite':
             await this.app.vault.modify(outputFile, content);
@@ -358,14 +364,15 @@ export class FileProcessor {
             return newName;
         }
       } else {
-        // If the file doesn't exist, create it regardless of the output handling option
+        console.debug(`eRouter486: Output file doesn't exist, creating new file ${outputFileName}`);
         await this.app.vault.create(outputFileName, content);
         console.debug(`eRouter486: Created new file ${outputFileName}`);
       }
 
+      console.debug(`eRouter486: Successfully saved processed content to ${outputFileName}`);
       return outputFileName;
     } catch (error) {
-      console.error(`eRouter486: Error saving processed content: ${error}`);
+      console.error(`eRouter486: Error saving processed content:`, error);
       return null;
     }
   }
