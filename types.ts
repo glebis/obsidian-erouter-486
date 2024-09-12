@@ -11,6 +11,7 @@ export interface MonitoringRule {
     outputFileHandling: 'overwrite' | 'append' | 'rename';
     deleteSourceFile: boolean;
     contentRegex: string;
+    outputFolder: string; // Add this line
 }
 
 export interface ERouter486Settings {
@@ -39,7 +40,8 @@ export const DEFAULT_SETTINGS: ERouter486Settings = {
         outputFileName: '',
         outputFileHandling: 'append',
         deleteSourceFile: false,
-        contentRegex: ''
+        contentRegex: '',
+        outputFolder: 'processed' // Add this line with a default value
     }],
     logFilePath: 'erouter_log.md'
 }
