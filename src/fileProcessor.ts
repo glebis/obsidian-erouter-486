@@ -331,20 +331,21 @@ export class FileProcessor {
   async saveProcessedContent(file: TFile, content: string, rule: MonitoringRule): Promise<string | null> {
     const outputFileName = this.getOutputFileName(file.name, rule.outputFileNameTemplate);
     console.debug(`eRouter486: Attempting to save content to ${outputFileName}`);
-    const outputFile = this.app.vault.getAbstractFileByPath(outputFileName);
 
     try {
+      const outputFile = this.app.vault.getAbstractFileByPath(outputFileName);
+
       if (outputFile instanceof TFile) {
         switch (rule.outputFileHandling) {
           case 'overwrite':
             await this.app.vault.modify(outputFile, content);
             console.debug(`eRouter486: Overwritten file ${outputFileName}`);
-            return outputFileName;
+            break;
           case 'append':
             const existingContent = await this.app.vault.read(outputFile);
             await this.app.vault.modify(outputFile, existingContent + '\n' + content);
             console.debug(`eRouter486: Appended to file ${outputFileName}`);
-            return outputFileName;
+            break;
           case 'rename':
             let newName = outputFileName;
             let counter = 1;
@@ -357,15 +358,16 @@ export class FileProcessor {
             return newName;
         }
       } else {
+        // If the file doesn't exist, create it regardless of the output handling option
         await this.app.vault.create(outputFileName, content);
         console.debug(`eRouter486: Created new file ${outputFileName}`);
-        return outputFileName;
       }
+
+      return outputFileName;
     } catch (error) {
       console.error(`eRouter486: Error saving processed content: ${error}`);
       return null;
     }
-    return null;
   }
 
   getOutputFileName(originalName: string, template: string): string {
