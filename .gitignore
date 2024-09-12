@@ -25,3 +25,4 @@ data.json
 .zed
 .editorconfig
 esbuild.config.mjs
+version-bump.mjs
