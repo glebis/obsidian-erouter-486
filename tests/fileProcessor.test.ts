@@ -18,7 +18,9 @@ describe('FileProcessor', () => {
     } as unknown as jest.Mocked<App>;
 
     settings = {
+      llmProvider: 'test-provider',
       apiKey: 'test-api-key',
+      apiEndpoint: 'test-endpoint',
       modelName: 'test-model',
       logFilePath: 'test-log.md',
       monitoringRules: [],
