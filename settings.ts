@@ -12,6 +12,7 @@ import {
   TFile,
   TAbstractFile
 } from "obsidian";
+import { SuggestModal } from "obsidian";
 import ERouter486Plugin from "./main";
 import {
   MonitoringRule,

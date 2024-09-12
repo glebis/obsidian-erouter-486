@@ -1,8 +1,12 @@
 import ERouter486Plugin from '../main';
-import { App, PluginManifest } from 'obsidian';
+import { App, PluginManifest, SuggestModal } from 'obsidian';
 import { FileProcessor } from '../src/fileProcessor';
 
-jest.mock('obsidian');
+jest.mock('obsidian', () => ({
+  App: jest.fn(),
+  PluginManifest: jest.fn(),
+  SuggestModal: jest.fn(),
+}));
 jest.mock('../src/fileProcessor');
 
 describe('ERouter486Plugin', () => {
