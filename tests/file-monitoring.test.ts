@@ -3,7 +3,7 @@ import { App, PluginManifest } from 'obsidian';
 import { FileProcessor } from '../src/fileProcessor';
 
 jest.mock('obsidian');
-jest.mock('../fileProcessor');
+jest.mock('../src/fileProcessor');
 
 describe('ERouter486Plugin', () => {
     let plugin: ERouter486Plugin;
