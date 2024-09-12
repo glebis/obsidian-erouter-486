@@ -1,4 +1,4 @@
-import { App, TFile, TAbstractFile, debounce } from 'obsidian';
+import { App, TFile, TAbstractFile } from 'obsidian';
 import { ERouter486Settings, MonitoringRule, QueueItem } from '../types';
 import { ContentFilter } from './content_filter';
 
@@ -31,14 +31,10 @@ export class FileProcessor {
             }
 
             this.fileChangeDebounce.set(debounceKey, setTimeout(() => {
-                this.processFileChange(file, rule);
+                this.processFile(file, rule);
                 this.fileChangeDebounce.delete(debounceKey);
             }, rule.delay * 1000));
         }
-    }
-
-    private async processFileChange(file: TFile, rule: MonitoringRule): Promise<void> {
-        await this.processFile(file, rule);
     }
 
     private async processFile(file: TFile, rule: MonitoringRule): Promise<void> {
